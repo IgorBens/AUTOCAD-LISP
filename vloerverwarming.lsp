@@ -101,7 +101,7 @@
   (princ "\nMiddenpunt berekend!")
 
   ;; ----------------------------------------------------------------------------
-  ;; STAP 4: Maak 50mm contour naar BINNEN (blijft in zone layer)
+  ;; STAP 4: Maak 50mm contour naar BINNEN (= eerste vloerverwarming kring)
   ;; ----------------------------------------------------------------------------
   (princ "\nMaak 50mm contour naar binnen...")
 
@@ -120,10 +120,10 @@
     )
   )
 
-  ;; Zet 50mm contour ook naar zone layer (dit is de rand van de zone)
-  (set-entity-layer contour_obj layer-zone)
+  ;; Zet 50mm contour naar vloerverwarming layer (dit is de buitenste kring)
+  (set-entity-layer contour_obj layer-vv)
 
-  (princ "\n50mm contour gemaakt (zone rand)!")
+  (princ "\n50mm contour gemaakt (eerste vloerverwarming kring)!")
 
   ;; ----------------------------------------------------------------------------
   ;; STAP 5: Vraag offset afstand voor vloerverwarming kringen
