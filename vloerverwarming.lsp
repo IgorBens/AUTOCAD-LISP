@@ -6,19 +6,56 @@
 ;;               2. Maakt 50mm contour naar BINNEN (als rand)
 ;;               3. Offset vanaf die contour verder naar binnen zoveel mogelijk keer
 ;;
+;; Layers:
+;;   - Zone Contour: 0_14 TD - Zone Contour
+;;   - Vloerverwarming: 0_05 TD - Vloerverwarming
+;;
 ;; Gebruik: Type VV in AutoCAD
 ;; ============================================================================
 
+;; ----------------------------------------------------------------------------
+;; HELPER FUNCTIE: Maak layer aan als die niet bestaat
+;; ----------------------------------------------------------------------------
+(defun make-layer (layer-name / layer-list)
+  (if (not (tblsearch "LAYER" layer-name))
+    (progn
+      (command "_.LAYER" "M" layer-name "")
+      (princ (strcat "\nLayer '" layer-name "' aangemaakt."))
+    )
+  )
+)
+
+;; ----------------------------------------------------------------------------
+;; HELPER FUNCTIE: Zet entity naar specifieke layer
+;; ----------------------------------------------------------------------------
+(defun set-entity-layer (ent layer-name / ent-data)
+  (setq ent-data (entget ent))
+  (setq ent-data (subst (cons 8 layer-name) (assoc 8 ent-data) ent-data))
+  (entmod ent-data)
+)
+
+;; ----------------------------------------------------------------------------
+;; HOOFDFUNCTIE
+;; ----------------------------------------------------------------------------
 (defun C:VV (/ obj offset_dist continue current_obj new_obj loop_count
               obj_data vert_list minx miny maxx maxy pt center_pt last_ent item
-              contour_obj)
+              contour_obj layer-zone layer-vv)
 
   (princ "\n=== VLOERVERWARMING KRINGEN ===")
 
   ;; ----------------------------------------------------------------------------
-  ;; STAP 1: Selecteer object
+  ;; STAP 1: Definieer en maak layers aan
   ;; ----------------------------------------------------------------------------
-  (princ "\nSelecteer een object (rechthoek, polyline, etc.):")
+  (setq layer-zone "0_14 TD - Zone Contour")
+  (setq layer-vv "0_05 TD - Vloerverwarming")
+
+  (make-layer layer-zone)
+  (make-layer layer-vv)
+
+  ;; ----------------------------------------------------------------------------
+  ;; STAP 2: Selecteer object
+  ;; ----------------------------------------------------------------------------
+  (princ "\nSelecteer zone contour (rechthoek, polyline, etc.):")
   (setq obj (car (entsel)))
 
   (if (null obj)
@@ -28,10 +65,14 @@
     )
   )
 
-  (princ "\nObject geselecteerd!")
+  (princ "\nZone geselecteerd!")
+
+  ;; Zet geselecteerd object naar zone contour layer
+  (set-entity-layer obj layer-zone)
+  (princ (strcat "\nZone naar layer '" layer-zone "' verplaatst."))
 
   ;; ----------------------------------------------------------------------------
-  ;; STAP 2: Bereken middenpunt van object
+  ;; STAP 3: Bereken middenpunt van object
   ;; ----------------------------------------------------------------------------
   (setq obj_data (entget obj))
 
@@ -60,7 +101,7 @@
   (princ "\nMiddenpunt berekend!")
 
   ;; ----------------------------------------------------------------------------
-  ;; STAP 3: Maak 50mm contour naar BINNEN
+  ;; STAP 4: Maak 50mm contour naar BINNEN (blijft in zone layer)
   ;; ----------------------------------------------------------------------------
   (princ "\nMaak 50mm contour naar binnen...")
 
@@ -79,10 +120,13 @@
     )
   )
 
-  (princ "\n50mm contour gemaakt!")
+  ;; Zet 50mm contour ook naar zone layer (dit is de rand van de zone)
+  (set-entity-layer contour_obj layer-zone)
+
+  (princ "\n50mm contour gemaakt (zone rand)!")
 
   ;; ----------------------------------------------------------------------------
-  ;; STAP 4: Vraag offset afstand voor vloerverwarming kringen
+  ;; STAP 5: Vraag offset afstand voor vloerverwarming kringen
   ;; ----------------------------------------------------------------------------
   (setq offset_dist (getdist "\nGeef offset afstand voor kringen (bijv. 100 of 150): "))
 
@@ -94,7 +138,7 @@
   )
 
   ;; ----------------------------------------------------------------------------
-  ;; STAP 5: Offset naar binnen toe vanaf de 50mm contour
+  ;; STAP 6: Offset naar binnen toe vanaf de 50mm contour
   ;; ----------------------------------------------------------------------------
   (princ "\nStart met offset van vloerverwarming kringen...")
 
@@ -118,6 +162,10 @@
       (progn
         ;; Succes - nieuwe offset gemaakt
         (setq current_obj new_obj)
+
+        ;; Zet nieuwe kring naar vloerverwarming layer
+        (set-entity-layer new_obj layer-vv)
+
         (princ (strcat "\nKring " (itoa loop_count) " gemaakt."))
       )
       (progn
