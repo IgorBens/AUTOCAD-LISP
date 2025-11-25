@@ -74,32 +74,35 @@
   (princ "\n2 rode ringen gemaakt!")
 
   ;; ----------------------------------------------------------------------------
-  ;; STAP 3: EXPLODE de eerste ring (TEST)
+  ;; STAP 3: EXPLODE BEIDE ringen
   ;; ----------------------------------------------------------------------------
-  (princ "\n\nTEST: Explode eerste ring...")
-
-  ;; Bewaar entity voor explode
-  (setq last_ent (entlast))
+  (princ "\n\nExplode beide ringen...")
 
   ;; Explode ring1
   (command "_.EXPLODE" ring1)
+  (princ "\nRing 1 geëxplodeerd!")
 
-  ;; Na explode zijn er meerdere nieuwe entities
-  (princ "\nRing geëxplodeerd!")
+  ;; Explode ring2
+  (command "_.EXPLODE" ring2)
+  (princ "\nRing 2 geëxplodeerd!")
 
   ;; ----------------------------------------------------------------------------
-  ;; VRAAG AAN GEBRUIKER
+  ;; STAP 4: Test - probeer segmenten te vinden
   ;; ----------------------------------------------------------------------------
-  (princ "\n\n=== TEST RESULTAAT ===")
-  (princ "\nIk heb de EERSTE rode ring geëxplodeerd.")
-  (princ "\n\nWat zie je?")
-  (princ "\n1. Is de ring nu uit losse lijnen?")
-  (princ "\n2. Hoeveel segmenten zie je? (4 voor rechthoek?)")
-  (princ "\n\nAls dit werkt, kan ik:")
-  (princ "\n- Beide ringen exploderen")
-  (princ "\n- Het rechtsboven segment van beide verwijderen")
-  (princ "\n- De uiteinden verbinden met een lijntje")
-  (princ "\n- Alles joinen tot 1 lijn")
+  (princ "\n\nBeide ringen zijn nu losse segmenten.")
+  (princ "\n\nVoor automatische verbinding moet ik weten:")
+  (princ "\n1. Op welke plek moeten de ringen 'open' zijn? (bijv. rechtsboven)")
+  (princ "\n2. Moeten we een segment verwijderen of kan fillet direct verbinden?")
+  (princ "\n3. Welke fillet radius? (0 = rechte hoek)")
+
+  ;; Test: teken een lijntje tussen geschatte punten
+  (princ "\n\n=== HANDMATIG TESTEN ===")
+  (princ "\nProbeer nu handmatig:")
+  (princ "\n1. Zoom in op de ringen")
+  (princ "\n2. Type FILLET")
+  (princ "\n3. Selecteer een segment van ring 1")
+  (princ "\n4. Selecteer een segment van ring 2")
+  (princ "\n5. Vertel me wat er gebeurt!")
 
   (princ "\n=========================")
   (princ)
