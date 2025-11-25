@@ -12,7 +12,7 @@
 
 (defun C:VVS2 (/ obj legpatroon offset_dist current_obj new_obj loop_count
                 obj_data minx miny maxx maxy pt center_pt last_ent item
-                contour_obj all_rings)
+                contour_obj all_rings retour_rings ring_count current_ring new_retour)
 
   (princ "\n=== SLAKKENHUIS V2 - DUBBELE SPIRAAL TEST ===")
 
@@ -126,13 +126,57 @@
     (command "_.CHPROP" ring "" "C" "1" "")  ;; Kleur 1 = Rood
   )
 
-  (princ "\n\n=== EERSTE TEST KLAAR ===")
-  (princ "\nWat je nu ziet zijn de AANVOER ringen (rood).")
-  (princ "\nZe staan op 2x het legpatroon van elkaar (dus 200mm als je 100mm opgaf).")
-  (princ "\n\nVertel me:")
-  (princ "\n1. Zie je rode ringen met grotere afstand ertussen?")
-  (princ "\n2. Zijn er genoeg ringen gemaakt?")
-  (princ "\n\nDan kan ik verder met stap 2: RETOUR ringen maken tussen de aanvoer in!")
+  ;; ----------------------------------------------------------------------------
+  ;; STAP 7: Maak RETOUR ringen (tussen aanvoer ringen in)
+  ;; ----------------------------------------------------------------------------
+  (princ "\n\nMaak RETOUR ringen (tussen aanvoer ringen)...")
+
+  (setq retour_rings (list))
+  (setq ring_count 0)
+
+  ;; Loop door alle aanvoer ringen (behalve de laatste)
+  (while (< ring_count (1- (length all_rings)))
+    (setq current_ring (nth ring_count all_rings))
+    (setq last_ent (entlast))
+
+    ;; Offset met 1x legpatroon (dit valt precies tussen 2 aanvoer ringen)
+    (command "_.OFFSET" legpatroon current_ring center_pt "")
+    (setq new_retour (entlast))
+
+    (if (not (equal new_retour last_ent))
+      (progn
+        (setq retour_rings (append retour_rings (list new_retour)))
+        (princ (strcat "\nRetour ring " (itoa (1+ ring_count)) " gemaakt."))
+      )
+      (progn
+        (princ "\nKon geen retour ring maken (te klein?).")
+      )
+    )
+
+    (setq ring_count (1+ ring_count))
+  )
+
+  (princ (strcat "\n\nTotaal " (itoa (length retour_rings)) " retour ringen gemaakt."))
+
+  ;; ----------------------------------------------------------------------------
+  ;; STAP 8: KLEUR de retour ringen BLAUW
+  ;; ----------------------------------------------------------------------------
+  (princ "\nKleur retour ringen blauw...")
+
+  (foreach ring retour_rings
+    (command "_.CHPROP" ring "" "C" "5" "")  ;; Kleur 5 = Blauw
+  )
+
+  (princ "\n\n=== DUBBELE SPIRAAL TEST KLAAR ===")
+  (princ "\nWat je nu ziet:")
+  (princ "\n- ROOD = Aanvoer (van buiten naar binnen)")
+  (princ "\n- BLAUW = Retour (van binnen naar buiten)")
+  (princ (strcat "\n- Afstand tussen elke lijn: " (rtos legpatroon 2 0) "mm"))
+  (princ "\n\nCheck:")
+  (princ "\n1. Zie je ROOD-BLAUW-ROOD-BLAUW-ROOD patroon?")
+  (princ "\n2. Is de afstand tussen alle lijnen ongeveer gelijk?")
+  (princ "\n3. Is dit het juiste patroon voor vloerverwarming?")
+  (princ "\n\nAls dit goed is, kan ik ze verbinden tot 1 doorlopende lijn!")
 
   (princ "\n=========================")
   (princ)
