@@ -59,15 +59,9 @@
     (progn
       (princ "\n")
       (princ (strcat "\nWAARSCHUWING: " new_name " bestaat al!"))
-      (initget "Ja Nee")
-      (setq answer (getkword "\nOverschrijven? [Ja/Nee] <Nee>: "))
-
-      (if (or (null answer) (equal answer "Nee"))
-        (progn
-          (princ "\nGeannuleerd.")
-          (exit)
-        )
-      )
+      (princ "\nVerwijder eerst het bestaande _clean bestand of hernoem het.")
+      (princ "\nScript gestopt.\n")
+      (exit)
     )
   )
 
