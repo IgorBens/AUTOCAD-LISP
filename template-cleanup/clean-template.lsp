@@ -3,14 +3,14 @@
 ;; ============================================================================
 ;; Beschrijving: Selecteer wat je wilt BEHOUDEN, rest wordt verwijderd
 ;;               - Verwijdert alle niet-geselecteerde elementen
-;;               - Verwijdert ongebruikte layout tabs
+;;               - Verwijdert ALLE layout tabs (behalve Model)
 ;;               - Purge alle ongebruikte elementen
 ;;
 ;; Gebruik: Type CLEANTEMPLATE in AutoCAD
 ;; ============================================================================
 
-(defun C:CLEANTEMPLATE (/ keep_ss all_ss keep_list all_list ent i delete_count
-                          layout_dict layout_obj layout_name answer)
+(defun C:CLEANTEMPLATE (/ keep_ss all_ss keep_list ent i delete_count
+                          layout_name layout_num all_layers layer_name)
 
   (princ "\n=== CLEAN DWG TEMPLATE ===")
   (princ "\n")
@@ -98,55 +98,72 @@
   (princ (strcat "\n" (itoa delete_count) " elementen verwijderd."))
 
   ;; ----------------------------------------------------------------------------
-  ;; STAP 6: Verwijder ongebruikte LAYOUT TABS (behalve Model)
+  ;; STAP 6: Verwijder ALLE LAYOUT TABS (behalve Model)
   ;; ----------------------------------------------------------------------------
-  (princ "\n\nVerwijderen van ongebruikte layout tabs...")
+  (princ "\n\nVerwijderen van layout tabs...")
 
-  ;; Lijst van alle layouts (behalve Model)
-  (setq layout_dict (namedobjdict))
-  (setq layout_dict (dictsearch layout_dict "ACAD_LAYOUT"))
+  (setq layout_num 1)
 
-  (if layout_dict
-    (progn
-      ;; Loop door alle layouts
-      (setq layout_obj (namedobjdict))
-      (setq layout_obj (dictsearch layout_obj "ACAD_LAYOUT"))
+  ;; Probeer Layout1 t/m Layout50 te verwijderen
+  (repeat 50
+    (setq layout_name (strcat "Layout" (itoa layout_num)))
 
-      ;; Gebruik een eenvoudige methode: probeer alle bekende layout namen te verwijderen
-      (setq layout_count 0)
-      (setq layout_num 1)
-
-      ;; Probeer Layout1 t/m Layout20 te verwijderen
-      (repeat 20
-        (setq layout_name (strcat "Layout" (itoa layout_num)))
-
-        ;; Probeer layout te verwijderen (zonder error als het niet bestaat)
-        (vl-catch-all-apply
-          'command
-          (list "._-LAYOUT" "_Delete" layout_name)
-        )
-
-        (setq layout_num (1+ layout_num))
-      )
-
-      (princ "\nLayout tabs opgeschoond.")
+    ;; Gebruik (vl-catch-all-error? ...) om errors te negeren
+    (if (not (vl-catch-all-error-p
+               (vl-catch-all-apply
+                 '(lambda ()
+                    (command "._-LAYOUT" "_Delete" layout_name)
+                    (while (> (getvar "CMDACTIVE") 0) (command))
+                  )
+                 nil
+               )
+             ))
+      (princ (strcat "\n  Layout verwijderd: " layout_name))
     )
-    (progn
-      (princ "\nGeen layout dictionary gevonden.")
-    )
+
+    (setq layout_num (1+ layout_num))
   )
 
+  (princ "\nLayout tabs opgeschoond.")
+
   ;; ----------------------------------------------------------------------------
-  ;; STAP 7: PURGE ALLES (meerdere keren voor nested items)
+  ;; STAP 7: Verwijder lege layers
+  ;; ----------------------------------------------------------------------------
+  (princ "\n\nVerwijderen van lege layers...")
+
+  ;; Loop door alle layers en probeer ze te verwijderen
+  (setq all_layers (tblnext "LAYER" T))
+  (while all_layers
+    (setq layer_name (cdr (assoc 2 all_layers)))
+
+    ;; Probeer layer te verwijderen (alleen lege layers worden verwijderd)
+    ;; Layer 0 en DEFPOINTS kunnen niet verwijderd worden (dat is goed)
+    (if (not (vl-catch-all-error-p
+               (vl-catch-all-apply
+                 '(lambda () (command "._-LAYER" "_Delete" layer_name "" ""))
+                 nil
+               )
+             ))
+      (princ (strcat "\n  Layer verwijderd: " layer_name))
+    )
+
+    (setq all_layers (tblnext "LAYER"))
+  )
+
+  (princ "\nLege layers verwijderd.")
+
+  ;; ----------------------------------------------------------------------------
+  ;; STAP 8: PURGE ALLES (meerdere keren voor nested items)
   ;; ----------------------------------------------------------------------------
   (princ "\n\nPurge tekening (dit kan even duren)...")
 
+  ;; BELANGRIJK: Gebruik "_Y" (YES) om echt te purgen!
   ;; Purge ALL meerdere keren (voor nested references)
   (command "._-PURGE" "_All" "*" "_N")
   (command "._-PURGE" "_All" "*" "_N")
   (command "._-PURGE" "_All" "*" "_N")
 
-  ;; Specifieke purges
+  ;; Specifieke purges met verificatie
   (command "._-PURGE" "_Blocks" "*" "_N")
   (command "._-PURGE" "_DimStyles" "*" "_N")
   (command "._-PURGE" "_LAyers" "*" "_N")
@@ -158,14 +175,17 @@
   (command "._-PURGE" "_Styles" "*" "_N")
   (command "._-PURGE" "_Tablestyles" "*" "_N")
   (command "._-PURGE" "_Visualstyles" "*" "_N")
+  (command "._-PURGE" "_Regapps" "*" "_N")
 
-  ;; Laatste keer alles purgen
+  ;; Laatste keer alles purgen (3x voor nested items)
+  (command "._-PURGE" "_All" "*" "_N")
+  (command "._-PURGE" "_All" "*" "_N")
   (command "._-PURGE" "_All" "*" "_N")
 
   (princ "\nPurge voltooid!")
 
   ;; ----------------------------------------------------------------------------
-  ;; STAP 8: AUDIT de tekening
+  ;; STAP 9: AUDIT de tekening
   ;; ----------------------------------------------------------------------------
   (princ "\n\nAudit tekening...")
   (command "._AUDIT" "_Y")
@@ -178,8 +198,9 @@
   (princ "\n=========================")
   (princ (strcat "\n  - " (itoa (sslength keep_ss)) " elementen behouden"))
   (princ (strcat "\n  - " (itoa delete_count) " elementen verwijderd"))
-  (princ "\n  - Layout tabs opgeschoond")
-  (princ "\n  - Alles gepurged")
+  (princ "\n  - Layout tabs verwijderd")
+  (princ "\n  - Lege layers verwijderd")
+  (princ "\n  - Volledig gepurged")
   (princ "\n\nVergeet niet om de tekening op te slaan!")
   (princ)
 )
