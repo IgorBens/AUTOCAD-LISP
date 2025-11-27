@@ -10,7 +10,7 @@
 ;; ============================================================================
 
 (defun C:CLEANTEMPLATE (/ keep_ss all_ss keep_list ent i delete_count
-                          layout_name layout_num all_layers layer_name)
+                          layout_name layout_list layout_count all_layers layer_name)
 
   (princ "\n=== CLEAN DWG TEMPLATE ===")
   (princ "\n")
@@ -102,29 +102,35 @@
   ;; ----------------------------------------------------------------------------
   (princ "\n\nVerwijderen van layout tabs...")
 
-  (setq layout_num 1)
+  ;; Loop door alle layouts in de tekening
+  (setq layout_list (layoutlist))
+  (setq layout_count 0)
 
-  ;; Probeer Layout1 t/m Layout50 te verwijderen
-  (repeat 50
-    (setq layout_name (strcat "Layout" (itoa layout_num)))
-
-    ;; Gebruik (vl-catch-all-error? ...) om errors te negeren
-    (if (not (vl-catch-all-error-p
-               (vl-catch-all-apply
-                 '(lambda ()
-                    (command "._-LAYOUT" "_Delete" layout_name)
-                    (while (> (getvar "CMDACTIVE") 0) (command))
-                  )
-                 nil
-               )
-             ))
-      (princ (strcat "\n  Layout verwijderd: " layout_name))
+  ;; Verwijder elke layout behalve "Model"
+  (foreach layout_name layout_list
+    (if (and layout_name
+             (not (equal (strcase layout_name) "MODEL")))
+      (progn
+        ;; Probeer layout te verwijderen
+        (if (not (vl-catch-all-error-p
+                   (vl-catch-all-apply
+                     '(lambda ()
+                        (command "._-LAYOUT" "_Delete" layout_name)
+                        (while (> (getvar "CMDACTIVE") 0) (command))
+                      )
+                     nil
+                   )
+                 ))
+          (progn
+            (princ (strcat "\n  Layout verwijderd: " layout_name))
+            (setq layout_count (1+ layout_count))
+          )
+        )
+      )
     )
-
-    (setq layout_num (1+ layout_num))
   )
 
-  (princ "\nLayout tabs opgeschoond.")
+  (princ (strcat "\n" (itoa layout_count) " layout tabs verwijderd."))
 
   ;; ----------------------------------------------------------------------------
   ;; STAP 7: Verwijder lege layers
@@ -198,7 +204,7 @@
   (princ "\n=========================")
   (princ (strcat "\n  - " (itoa (sslength keep_ss)) " elementen behouden"))
   (princ (strcat "\n  - " (itoa delete_count) " elementen verwijderd"))
-  (princ "\n  - Layout tabs verwijderd")
+  (princ (strcat "\n  - " (itoa layout_count) " layout tabs verwijderd"))
   (princ "\n  - Lege layers verwijderd")
   (princ "\n  - Volledig gepurged")
   (princ "\n\nVergeet niet om de tekening op te slaan!")
