@@ -11,9 +11,10 @@
 ;; Gebruik: Type CLEANTEMPLATE in AutoCAD
 ;; ============================================================================
 
-(defun C:CLEANTEMPLATE (/ dwg_name dwg_prefix dwg_titled base_name new_name new_path
+(defun C:CLEANTEMPLATE (/ dwg_name dwg_prefix dwg_titled base_name new_name new_path original_path
                           keep_ss all_ss keep_list ent i delete_count
-                          layout_name layout_list layout_count all_layers layer_name answer)
+                          layout_name layout_list layout_count all_layers layer_name answer
+                          text_pt text_height)
 
   (princ "\n=== CLEAN DWG TEMPLATE ===")
   (princ "\n")
@@ -37,6 +38,7 @@
   ;; ----------------------------------------------------------------------------
   (setq dwg_name (getvar "DWGNAME"))      ; bijv. "template.dwg"
   (setq dwg_prefix (getvar "DWGPREFIX"))  ; bijv. "C:/projecten/"
+  (setq original_path (strcat dwg_prefix dwg_name)) ; volledig pad naar origineel
 
   (princ (strcat "\nHuidige file: " dwg_prefix dwg_name))
 
@@ -276,10 +278,55 @@
   (command "._AUDIT" "_Y")
 
   ;; ----------------------------------------------------------------------------
-  ;; STAP 16: SAVE de cleaned tekening
+  ;; STAP 16: Voeg "CLEAN DWG" watermark tekst toe
+  ;; ----------------------------------------------------------------------------
+  (princ "\n\nTekst 'CLEAN DWG' toevoegen...")
+  (princ "\nKlik waar je de 'CLEAN DWG' tekst wilt plaatsen:")
+
+  (setq text_pt (getpoint "\nKlik locatie voor tekst (of ENTER voor 0,0): "))
+
+  ;; Als geen punt geselecteerd, gebruik 0,0
+  (if (null text_pt)
+    (setq text_pt (list 0.0 0.0 0.0))
+  )
+
+  ;; Vraag teksthoogte
+  (setq text_height (getdist "\nGeef teksthoogte (bijv. 500): "))
+
+  ;; Als geen hoogte opgegeven, gebruik 500
+  (if (null text_height)
+    (setq text_height 500.0)
+  )
+
+  ;; Voeg tekst toe met TEXT command
+  (command "._TEXT"
+           "_J"          ; Justify
+           "_MC"         ; Middle Center
+           text_pt       ; Insertion point
+           text_height   ; Height
+           "0"           ; Rotation
+           "CLEAN DWG"   ; Text string
+  )
+
+  ;; Maak de tekst rood (kleur 1)
+  (setq last_text (entlast))
+  (setq text_data (entget last_text))
+  (setq text_data (subst (cons 62 1) (assoc 62 text_data) text_data)) ; Kleur 1 = rood
+  (entmod text_data)
+
+  (princ "\n✓ Watermark toegevoegd")
+
+  ;; ----------------------------------------------------------------------------
+  ;; STAP 17: SAVE de cleaned tekening
   ;; ----------------------------------------------------------------------------
   (princ "\n\nOpslaan...")
   (command "._QSAVE")
+
+  ;; ----------------------------------------------------------------------------
+  ;; STAP 18: Open origineel bestand opnieuw (beide blijven open)
+  ;; ----------------------------------------------------------------------------
+  (princ "\n\nOrigineel bestand opnieuw openen...")
+  (command "._OPEN" original_path)
 
   ;; ----------------------------------------------------------------------------
   ;; Klaar!
@@ -292,9 +339,11 @@
   (princ (strcat "\n  - " (itoa layout_count) " layout tabs verwijderd"))
   (princ "\n  - Lege layers verwijderd")
   (princ "\n  - Volledig gepurged")
+  (princ "\n  - 'CLEAN DWG' watermark toegevoegd")
   (princ "\n")
   (princ (strcat "\n✓ Origineel intact: " dwg_name))
   (princ (strcat "\n✓ Cleaned versie: " new_name))
+  (princ "\n✓ Beide bestanden zijn open")
   (princ "\n")
   (princ)
 )

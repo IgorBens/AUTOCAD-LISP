@@ -50,6 +50,8 @@ AUTOCAD-LISP/
 🗑️ Verwijdert ALLE layout tabs (A4_Landsc., A3_Portr., etc.)
 🧹 Purge ALLES (blocks, layers, styles, materials, etc.)
 🔍 Audit de tekening voor errors
+🔴 Voegt grote rode "CLEAN DWG" watermark toe (zodat je weet welke versie je hebt)
+📂 Beide bestanden blijven open
 💾 Auto-save naar nieuwe file
 
 **Perfecte workflow:**
@@ -58,7 +60,8 @@ AUTOCAD-LISP/
 3. Window-select je vloerverwarming
 4. Shift+Window-select je muren
 5. Shift+Click collectors en andere elementen
-6. Bevestig → Klaar! Origineel blijft intact
+6. Klik locatie voor "CLEAN DWG" tekst (grote rode watermark)
+7. Bevestig → Klaar! Origineel blijft intact + beide bestanden open
 
 ---
 

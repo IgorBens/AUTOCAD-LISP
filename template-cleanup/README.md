@@ -31,12 +31,19 @@ Type in AutoCAD: `CLEANTEMPLATE`
 
 5. **Bevestig** cleanup
 
-6. **Klaar!**
+6. **Klik locatie** voor "CLEAN DWG" tekst
+   - Script vraagt waar je de watermark wilt
+   - Geef teksthoogte (bijv. 500mm)
+   - Grote rode tekst wordt toegevoegd
+
+7. **Klaar!**
    - Alles wat niet geselecteerd was = weg
    - Layout tabs verwijderd
    - Volledig gepurged
+   - "CLEAN DWG" watermark toegevoegd
    - Auto-saved als `template_clean.dwg`
    - Origineel `template.dwg` blijft intact!
+   - **Beide bestanden blijven open**
 
 ## Wat het doet
 
@@ -46,6 +53,8 @@ Type in AutoCAD: `CLEANTEMPLATE`
 - 🗑️ Verwijdert ALLE layout tabs (A4_Landsc., A3_Portr., etc.)
 - 🧹 Purge ALLES (blocks, layers, styles, etc.)
 - 🔍 Audit voor errors
+- 🔴 **"CLEAN DWG" watermark** - grote rode tekst zodat je weet welke versie je open hebt
+- 📂 **Beide bestanden blijven open** - origineel gaat automatisch terug open
 - 💾 Auto-save naar nieuwe file
 
 ## Voorbeeld
@@ -73,15 +82,26 @@ Wil je ALLE ANDERE elementen verwijderen? [Ja/Nee] <Nee>: J
 
 [... cleanup process ...]
 
+Tekst 'CLEAN DWG' toevoegen...
+Klik waar je de 'CLEAN DWG' tekst wilt plaatsen:
+Klik locatie voor tekst (of ENTER voor 0,0): [klik punt]
+Geef teksthoogte (bijv. 500): 500
+✓ Watermark toegevoegd
+
+Opslaan...
+Origineel bestand opnieuw openen...
+
 ✓ Template is schoongemaakt!
   - 1614 elementen behouden
   - 72 elementen verwijderd
   - 12 layout tabs verwijderd
   - Lege layers verwijderd
   - Volledig gepurged
+  - 'CLEAN DWG' watermark toegevoegd
 
 ✓ Origineel intact: template.dwg
 ✓ Cleaned versie: template_clean.dwg
+✓ Beide bestanden zijn open
 ```
 
 ## Edge Cases
@@ -97,3 +117,6 @@ Wil je ALLE ANDERE elementen verwijderen? [Ja/Nee] <Nee>: J
 - Model tab blijft altijd behouden
 - Layer 0 en DEFPOINTS blijven (systeem layers)
 - Purge draait 6x voor nested references
+- **Watermark voorkomen verwarring** - je ziet meteen dat je in de CLEAN versie zit
+- **Switch tussen bestanden** - gebruik Window menu of Ctrl+Tab in AutoCAD
+- **Watermark verwijderen** - selecteer de tekst en delete (als je wilt)
