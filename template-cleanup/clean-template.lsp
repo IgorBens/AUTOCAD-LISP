@@ -298,14 +298,8 @@
     (setq text_height 500.0)
   )
 
-  ;; Voeg tekst toe met MTEXT (beter dan TEXT voor grote tekst)
-  (command "._MTEXT"
-           text_pt                    ; First corner
-           "H" text_height            ; Height
-           "J" "MC"                   ; Justify Middle Center
-           "CLEAN DWG"                ; Text content
-           ""                         ; End MTEXT
-  )
+  ;; Voeg tekst toe met TEXT command (juiste syntax!)
+  (command "._TEXT" "J" "MC" text_pt text_height "0" "CLEAN DWG")
 
   ;; Wacht tot command klaar is
   (while (> (getvar "CMDACTIVE") 0) (command))
@@ -333,14 +327,11 @@
   (while (> (getvar "CMDACTIVE") 0) (command))
 
   ;; ----------------------------------------------------------------------------
-  ;; STAP 18: Sluit clean en open origineel (terug naar origineel)
+  ;; STAP 18: Open origineel bestand (beide blijven open)
   ;; ----------------------------------------------------------------------------
-  (princ "\n\nTerug naar origineel bestand...")
+  (princ "\n\nOrigineel bestand openen...")
 
-  ;; Sluit de huidige (clean) tekening
-  (command "._CLOSE")
-
-  ;; Open origineel bestand
+  ;; Open origineel bestand (zonder clean te sluiten)
   (command "._OPEN" original_path)
 
   ;; Wacht tot open klaar is
@@ -359,9 +350,9 @@
   (princ "\n  - Volledig gepurged")
   (princ "\n  - 'CLEAN DWG' watermark toegevoegd")
   (princ "\n")
-  (princ (strcat "\n✓ Origineel intact en geopend: " dwg_name))
+  (princ (strcat "\n✓ Origineel geopend: " dwg_name))
   (princ (strcat "\n✓ Cleaned versie opgeslagen: " new_name))
-  (princ "\n✓ Je zit nu weer in het origineel")
+  (princ "\n✓ Beide bestanden zijn nu open (gebruik Window menu om te wisselen)")
   (princ "\n")
   (princ)
 )
