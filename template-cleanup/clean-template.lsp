@@ -327,15 +327,12 @@
   (while (> (getvar "CMDACTIVE") 0) (command))
 
   ;; ----------------------------------------------------------------------------
-  ;; STAP 18: Open origineel bestand (beide blijven open)
+  ;; STAP 18: Sluit clean versie (terug naar origineel)
   ;; ----------------------------------------------------------------------------
-  (princ "\n\nOrigineel bestand openen...")
+  (princ "\n\nSluiten van clean versie...")
 
-  ;; Open origineel bestand - pad wordt gequote voor spaties
-  (command "._OPEN" (strcat "\"" original_path "\""))
-
-  ;; Wacht tot open klaar is
-  (while (> (getvar "CMDACTIVE") 0) (command))
+  ;; Sluit de huidige (clean) file - hierna ben je automatisch terug in origineel
+  (command "._CLOSE")
 
   ;; ----------------------------------------------------------------------------
   ;; Klaar!
@@ -350,9 +347,11 @@
   (princ "\n  - Volledig gepurged")
   (princ "\n  - 'CLEAN DWG' watermark toegevoegd")
   (princ "\n")
-  (princ (strcat "\n✓ Origineel geopend: " dwg_name))
+  (princ (strcat "\n✓ Origineel intact: " dwg_name))
   (princ (strcat "\n✓ Cleaned versie opgeslagen: " new_name))
-  (princ "\n✓ Beide bestanden zijn nu open (gebruik Window menu om te wisselen)")
+  (princ "\n✓ Je zit nu weer in het origineel")
+  (princ "\n")
+  (princ "\nTip: Open de cleaned versie via File > Recent Files om te vergelijken")
   (princ "\n")
   (princ)
 )
