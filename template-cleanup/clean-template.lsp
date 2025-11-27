@@ -328,8 +328,8 @@
   ;; Converteer backslashes naar forward slashes (AutoCAD accepteert beide)
   (setq original_path_fixed (vl-string-translate "\\" "/" original_path))
 
-  ;; Open origineel bestand - GEEN quotes toevoegen, command doet dat zelf!
-  (command "._OPEN" original_path_fixed)
+  ;; Open origineel bestand - gebruik FILEOPEN (beter voor LISP dan OPEN)
+  (command "._FILEOPEN" original_path_fixed)
 
   ;; Wacht tot open klaar is
   (while (> (getvar "CMDACTIVE") 0) (command))
