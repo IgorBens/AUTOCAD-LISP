@@ -298,20 +298,27 @@
     (setq text_height 500.0)
   )
 
-  ;; Voeg tekst toe met TEXT command
-  (command "._TEXT"
-           "_J"          ; Justify
-           "_MC"         ; Middle Center
-           text_pt       ; Insertion point
-           text_height   ; Height
-           "0"           ; Rotation
-           "CLEAN DWG"   ; Text string
+  ;; Voeg tekst toe met MTEXT (beter dan TEXT voor grote tekst)
+  (command "._MTEXT"
+           text_pt                    ; First corner
+           "H" text_height            ; Height
+           "J" "MC"                   ; Justify Middle Center
+           "CLEAN DWG"                ; Text content
+           ""                         ; End MTEXT
   )
+
+  ;; Wacht tot command klaar is
+  (while (> (getvar "CMDACTIVE") 0) (command))
 
   ;; Maak de tekst rood (kleur 1)
   (setq last_text (entlast))
   (setq text_data (entget last_text))
-  (setq text_data (subst (cons 62 1) (assoc 62 text_data) text_data)) ; Kleur 1 = rood
+
+  ;; Voeg kleur toe (rood = 62, waarde 1)
+  (if (assoc 62 text_data)
+    (setq text_data (subst (cons 62 1) (assoc 62 text_data) text_data))
+    (setq text_data (append text_data (list (cons 62 1))))
+  )
   (entmod text_data)
 
   (princ "\n✓ Watermark toegevoegd")
@@ -319,14 +326,25 @@
   ;; ----------------------------------------------------------------------------
   ;; STAP 17: SAVE de cleaned tekening
   ;; ----------------------------------------------------------------------------
-  (princ "\n\nOpslaan...")
+  (princ "\n\nOpslaan clean versie...")
   (command "._QSAVE")
 
+  ;; Wacht tot save klaar is
+  (while (> (getvar "CMDACTIVE") 0) (command))
+
   ;; ----------------------------------------------------------------------------
-  ;; STAP 18: Open origineel bestand opnieuw (beide blijven open)
+  ;; STAP 18: Sluit clean en open origineel (terug naar origineel)
   ;; ----------------------------------------------------------------------------
-  (princ "\n\nOrigineel bestand opnieuw openen...")
+  (princ "\n\nTerug naar origineel bestand...")
+
+  ;; Sluit de huidige (clean) tekening
+  (command "._CLOSE")
+
+  ;; Open origineel bestand
   (command "._OPEN" original_path)
+
+  ;; Wacht tot open klaar is
+  (while (> (getvar "CMDACTIVE") 0) (command))
 
   ;; ----------------------------------------------------------------------------
   ;; Klaar!
@@ -341,9 +359,9 @@
   (princ "\n  - Volledig gepurged")
   (princ "\n  - 'CLEAN DWG' watermark toegevoegd")
   (princ "\n")
-  (princ (strcat "\n✓ Origineel intact: " dwg_name))
-  (princ (strcat "\n✓ Cleaned versie: " new_name))
-  (princ "\n✓ Beide bestanden zijn open")
+  (princ (strcat "\n✓ Origineel intact en geopend: " dwg_name))
+  (princ (strcat "\n✓ Cleaned versie opgeslagen: " new_name))
+  (princ "\n✓ Je zit nu weer in het origineel")
   (princ "\n")
   (princ)
 )
