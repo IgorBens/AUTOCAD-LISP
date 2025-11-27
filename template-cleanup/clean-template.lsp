@@ -327,12 +327,10 @@
   (while (> (getvar "CMDACTIVE") 0) (command))
 
   ;; ----------------------------------------------------------------------------
-  ;; STAP 18: Sluit clean versie (terug naar origineel)
+  ;; STAP 18: Klaar - blijf in clean versie
   ;; ----------------------------------------------------------------------------
-  (princ "\n\nSluiten van clean versie...")
-
-  ;; Sluit de huidige (clean) file - hierna ben je automatisch terug in origineel
-  (command "._CLOSE")
+  ;; Origineel blijft op de achtergrond open (door SAVEAS)
+  ;; User kan switchen via Ctrl+Tab of Window menu
 
   ;; ----------------------------------------------------------------------------
   ;; Klaar!
@@ -349,9 +347,9 @@
   (princ "\n")
   (princ (strcat "\n✓ Origineel intact: " dwg_name))
   (princ (strcat "\n✓ Cleaned versie opgeslagen: " new_name))
-  (princ "\n✓ Je zit nu weer in het origineel")
   (princ "\n")
-  (princ "\nTip: Open de cleaned versie via File > Recent Files om te vergelijken")
+  (princ "\nJe zit nu in de CLEAN versie (met watermark)")
+  (princ "\nOrigineel is op achtergrond - gebruik Ctrl+Tab of Window menu om te wisselen")
   (princ "\n")
   (princ)
 )
