@@ -1,1 +1,32 @@
 # AUTOCAD-LISP
+
+AutoCAD LISP scripts collection - each project in its own folder.
+
+## Projects
+
+### 🔥 [vloerverwarming](./vloerverwarming/)
+Automatic underfloor heating circuit generator
+- Creates 50mm inner contour
+- Generates offset loops for heating circuits
+- Command: `VV`
+
+## Structure
+
+Each project lives in its own folder:
+```
+/
+├── vloerverwarming/
+│   └── vloerverwarming.lsp
+├── [next-project]/
+│   └── ...
+└── README.md
+```
+
+## Usage
+
+1. Load the desired `.lsp` file in AutoCAD: `(load "path/to/script.lsp")`
+2. Use the command listed in the project description
+
+## Adding New Projects
+
+Just create a new folder for each project and add your `.lsp` files there!
