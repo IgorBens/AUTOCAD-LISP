@@ -298,8 +298,8 @@
     (setq text_height 500.0)
   )
 
-  ;; Voeg tekst toe met TEXT command (juiste syntax!)
-  (command "._TEXT" "J" "MC" text_pt text_height "0" "CLEAN DWG")
+  ;; Voeg tekst toe met TEXT command (correcte parameter volgorde!)
+  (command "._TEXT" text_pt text_height "0" "CLEAN DWG")
 
   ;; Wacht tot command klaar is
   (while (> (getvar "CMDACTIVE") 0) (command))
@@ -331,8 +331,8 @@
   ;; ----------------------------------------------------------------------------
   (princ "\n\nOrigineel bestand openen...")
 
-  ;; Open origineel bestand (zonder clean te sluiten)
-  (command "._OPEN" original_path)
+  ;; Open origineel bestand - pad wordt gequote voor spaties
+  (command "._OPEN" (strcat "\"" original_path "\""))
 
   ;; Wacht tot open klaar is
   (while (> (getvar "CMDACTIVE") 0) (command))
