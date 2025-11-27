@@ -1,23 +1,101 @@
 ;; ============================================================================
-;; CLEAN DWG TEMPLATE - Interactieve Selectie
+;; CLEAN DWG TEMPLATE - Interactieve Selectie met Auto-Copy
 ;; ============================================================================
-;; Beschrijving: Selecteer wat je wilt BEHOUDEN, rest wordt verwijderd
-;;               - Verwijdert alle niet-geselecteerde elementen
+;; Beschrijving: Maakt automatisch een kopie met "_clean" suffix en ruimt op
+;;               - Maakt kopie van huidige file met "_clean" achter naam
+;;               - Selecteer wat je wilt BEHOUDEN, rest wordt verwijderd
 ;;               - Verwijdert ALLE layout tabs (behalve Model)
 ;;               - Purge alle ongebruikte elementen
+;;               - Origineel blijft intact!
 ;;
 ;; Gebruik: Type CLEANTEMPLATE in AutoCAD
 ;; ============================================================================
 
-(defun C:CLEANTEMPLATE (/ keep_ss all_ss keep_list ent i delete_count
-                          layout_name layout_list layout_count all_layers layer_name)
+(defun C:CLEANTEMPLATE (/ dwg_name dwg_prefix dwg_titled base_name new_name new_path
+                          keep_ss all_ss keep_list ent i delete_count
+                          layout_name layout_list layout_count all_layers layer_name answer)
 
   (princ "\n=== CLEAN DWG TEMPLATE ===")
   (princ "\n")
 
   ;; ----------------------------------------------------------------------------
-  ;; STAP 1: Selecteer elementen die je wilt BEHOUDEN
+  ;; STAP 1: Check of bestand is opgeslagen
   ;; ----------------------------------------------------------------------------
+  (setq dwg_titled (getvar "DWGTITLED"))
+
+  (if (= dwg_titled 0)
+    (progn
+      (princ "\nERROR: Bestand is nog niet opgeslagen!")
+      (princ "\nSave eerst je bestand voordat je CLEANTEMPLATE gebruikt.")
+      (princ "\n")
+      (exit)
+    )
+  )
+
+  ;; ----------------------------------------------------------------------------
+  ;; STAP 2: Haal bestandsnaam en pad op
+  ;; ----------------------------------------------------------------------------
+  (setq dwg_name (getvar "DWGNAME"))      ; bijv. "template.dwg"
+  (setq dwg_prefix (getvar "DWGPREFIX"))  ; bijv. "C:/projecten/"
+
+  (princ (strcat "\nHuidige file: " dwg_prefix dwg_name))
+
+  ;; ----------------------------------------------------------------------------
+  ;; STAP 3: Maak nieuwe bestandsnaam met "_clean" suffix
+  ;; ----------------------------------------------------------------------------
+  ;; Verwijder ".dwg" extensie en voeg "_clean.dwg" toe
+  (setq base_name (vl-filename-base dwg_name))  ; "template"
+  (setq new_name (strcat base_name "_clean.dwg")) ; "template_clean.dwg"
+  (setq new_path (strcat dwg_prefix new_name))   ; "C:/projecten/template_clean.dwg"
+
+  (princ (strcat "\nNieuwe file: " new_path))
+
+  ;; ----------------------------------------------------------------------------
+  ;; STAP 4: Check of nieuwe file al bestaat
+  ;; ----------------------------------------------------------------------------
+  (if (findfile new_path)
+    (progn
+      (princ "\n")
+      (princ (strcat "\nWAARSCHUWING: " new_name " bestaat al!"))
+      (initget "Ja Nee")
+      (setq answer (getkword "\nOverschrijven? [Ja/Nee] <Nee>: "))
+
+      (if (or (null answer) (equal answer "Nee"))
+        (progn
+          (princ "\nGeannuleerd.")
+          (exit)
+        )
+      )
+    )
+  )
+
+  ;; ----------------------------------------------------------------------------
+  ;; STAP 5: Vraag bevestiging om kopie te maken
+  ;; ----------------------------------------------------------------------------
+  (princ "\n")
+  (initget "Ja Nee")
+  (setq answer (getkword "\nKopie maken en cleanen? [Ja/Nee] <Ja>: "))
+
+  (if (equal answer "Nee")
+    (progn
+      (princ "\nGeannuleerd.")
+      (exit)
+    )
+  )
+
+  ;; ----------------------------------------------------------------------------
+  ;; STAP 6: SAVEAS naar nieuwe file (je zit nu in de kopie!)
+  ;; ----------------------------------------------------------------------------
+  (princ "\n\nKopie wordt gemaakt...")
+  (command "._SAVEAS" "" new_path)
+
+  (princ (strcat "\n✓ Kopie gemaakt: " new_name))
+  (princ "\n✓ Je zit nu in de nieuwe file")
+
+  ;; ----------------------------------------------------------------------------
+  ;; STAP 7: Selecteer elementen die je wilt BEHOUDEN
+  ;; ----------------------------------------------------------------------------
+  (princ "\n")
   (princ "\nSelecteer alle elementen die je wilt BEHOUDEN:")
   (princ "\n  - Vloerverwarming")
   (princ "\n  - Muren/Wanden")
@@ -30,6 +108,7 @@
   (if (null keep_ss)
     (progn
       (princ "\nGeen elementen geselecteerd. Geannuleerd.")
+      (princ "\n(Kopie blijft bestaan, maar is niet opgeschoond)")
       (exit)
     )
   )
@@ -37,20 +116,21 @@
   (princ (strcat "\n" (itoa (sslength keep_ss)) " elementen geselecteerd om te BEHOUDEN."))
 
   ;; ----------------------------------------------------------------------------
-  ;; STAP 2: Bevestiging
+  ;; STAP 8: Bevestiging cleanup
   ;; ----------------------------------------------------------------------------
   (initget "Ja Nee")
   (setq answer (getkword "\n\nWil je ALLE ANDERE elementen verwijderen? [Ja/Nee] <Nee>: "))
 
   (if (or (null answer) (equal answer "Nee"))
     (progn
-      (princ "\nGeannuleerd.")
+      (princ "\nCleanup geannuleerd.")
+      (princ "\n(Kopie blijft bestaan, maar is niet opgeschoond)")
       (exit)
     )
   )
 
   ;; ----------------------------------------------------------------------------
-  ;; STAP 3: Maak lijst van entity names die behouden moeten worden
+  ;; STAP 9: Maak lijst van entity names die behouden moeten worden
   ;; ----------------------------------------------------------------------------
   (setq keep_list (list))
   (setq i 0)
@@ -63,7 +143,7 @@
   (princ "\n\nStart met verwijderen van niet-geselecteerde elementen...")
 
   ;; ----------------------------------------------------------------------------
-  ;; STAP 4: Selecteer ALLE elementen in de tekening
+  ;; STAP 10: Selecteer ALLE elementen in de tekening
   ;; ----------------------------------------------------------------------------
   (setq all_ss (ssget "_X"))
 
@@ -75,7 +155,7 @@
   )
 
   ;; ----------------------------------------------------------------------------
-  ;; STAP 5: Verwijder alle elementen die NIET in keep_list staan
+  ;; STAP 11: Verwijder alle elementen die NIET in keep_list staan
   ;; ----------------------------------------------------------------------------
   (setq delete_count 0)
   (setq i 0)
@@ -98,7 +178,7 @@
   (princ (strcat "\n" (itoa delete_count) " elementen verwijderd."))
 
   ;; ----------------------------------------------------------------------------
-  ;; STAP 6: Verwijder ALLE LAYOUT TABS (behalve Model)
+  ;; STAP 12: Verwijder ALLE LAYOUT TABS (behalve Model)
   ;; ----------------------------------------------------------------------------
   (princ "\n\nVerwijderen van layout tabs...")
 
@@ -133,7 +213,7 @@
   (princ (strcat "\n" (itoa layout_count) " layout tabs verwijderd."))
 
   ;; ----------------------------------------------------------------------------
-  ;; STAP 7: Verwijder lege layers
+  ;; STAP 13: Verwijder lege layers
   ;; ----------------------------------------------------------------------------
   (princ "\n\nVerwijderen van lege layers...")
 
@@ -159,11 +239,10 @@
   (princ "\nLege layers verwijderd.")
 
   ;; ----------------------------------------------------------------------------
-  ;; STAP 8: PURGE ALLES (meerdere keren voor nested items)
+  ;; STAP 14: PURGE ALLES (meerdere keren voor nested items)
   ;; ----------------------------------------------------------------------------
   (princ "\n\nPurge tekening (dit kan even duren)...")
 
-  ;; BELANGRIJK: Gebruik "_Y" (YES) om echt te purgen!
   ;; Purge ALL meerdere keren (voor nested references)
   (command "._-PURGE" "_All" "*" "_N")
   (command "._-PURGE" "_All" "*" "_N")
@@ -191,23 +270,32 @@
   (princ "\nPurge voltooid!")
 
   ;; ----------------------------------------------------------------------------
-  ;; STAP 9: AUDIT de tekening
+  ;; STAP 15: AUDIT de tekening
   ;; ----------------------------------------------------------------------------
   (princ "\n\nAudit tekening...")
   (command "._AUDIT" "_Y")
 
   ;; ----------------------------------------------------------------------------
+  ;; STAP 16: SAVE de cleaned tekening
+  ;; ----------------------------------------------------------------------------
+  (princ "\n\nOpslaan...")
+  (command "._QSAVE")
+
+  ;; ----------------------------------------------------------------------------
   ;; Klaar!
   ;; ----------------------------------------------------------------------------
   (princ "\n\n=========================")
-  (princ "\nTemplate is schoongemaakt!")
+  (princ "\n✓ Template is schoongemaakt!")
   (princ "\n=========================")
   (princ (strcat "\n  - " (itoa (sslength keep_ss)) " elementen behouden"))
   (princ (strcat "\n  - " (itoa delete_count) " elementen verwijderd"))
   (princ (strcat "\n  - " (itoa layout_count) " layout tabs verwijderd"))
   (princ "\n  - Lege layers verwijderd")
   (princ "\n  - Volledig gepurged")
-  (princ "\n\nVergeet niet om de tekening op te slaan!")
+  (princ "\n")
+  (princ (strcat "\n✓ Origineel intact: " dwg_name))
+  (princ (strcat "\n✓ Cleaned versie: " new_name))
+  (princ "\n")
   (princ)
 )
 

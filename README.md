@@ -36,25 +36,29 @@ AUTOCAD-LISP/
 **Locatie:** `template-cleanup/clean-template.lsp`
 
 ### Gebruik
-1. Open je DWG template in AutoCAD
+1. Open je DWG template in AutoCAD (moet opgeslagen zijn!)
 2. Laad: `(load "template-cleanup/clean-template.lsp")`
 3. Type: `CLEANTEMPLATE`
-4. **Selecteer** alle elementen die je wilt **BEHOUDEN** (vloerverwarming, muren, collectors, etc.)
-5. Bevestig met "Ja"
+4. Script maakt automatisch kopie met "_clean" suffix
+5. **Selecteer** alle elementen die je wilt **BEHOUDEN** (vloerverwarming, muren, collectors, etc.)
+6. Bevestig met "Ja"
 
 ### Wat doet het?
+🔒 **Origineel blijft veilig!** Maakt automatisch `bestand_clean.dwg`
 ✅ Vraagt je om elementen te selecteren die je wilt behouden
 ❌ Verwijdert ALLES wat je NIET selecteerde
-🗑️ Verwijdert alle ongebruikte layout tabs (Layout1, Layout2, etc.)
+🗑️ Verwijdert ALLE layout tabs (A4_Landsc., A3_Portr., etc.)
 🧹 Purge ALLES (blocks, layers, styles, materials, etc.)
 🔍 Audit de tekening voor errors
+💾 Auto-save naar nieuwe file
 
 **Perfecte workflow:**
-1. Window-select je vloerverwarming
-2. Shift+Window-select je muren
-3. Shift+Click collectors en andere elementen
-4. Run CLEANTEMPLATE
-5. Klaar! Alles wat je niet selecteerde is weg
+1. Open `template.dwg` → Type CLEANTEMPLATE
+2. Bevestig → Script maakt `template_clean.dwg`
+3. Window-select je vloerverwarming
+4. Shift+Window-select je muren
+5. Shift+Click collectors en andere elementen
+6. Bevestig → Klaar! Origineel blijft intact
 
 ---
 
