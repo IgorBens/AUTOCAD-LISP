@@ -12,7 +12,7 @@
 ;; ============================================================================
 
 (defun C:CLEANTEMPLATE (/ dwg_name dwg_prefix dwg_titled base_name new_name new_path original_path
-                          original_path_fixed original_path_quoted keep_ss all_ss keep_list ent i delete_count
+                          original_path_fixed keep_ss all_ss keep_list ent i delete_count
                           layout_name layout_list layout_count all_layers layer_name answer
                           text_pt text_height)
 
@@ -290,13 +290,8 @@
     (setq text_pt (list 0.0 0.0 0.0))
   )
 
-  ;; Vraag teksthoogte
-  (setq text_height (getdist "\nGeef teksthoogte (bijv. 500): "))
-
-  ;; Als geen hoogte opgegeven, gebruik 500
-  (if (null text_height)
-    (setq text_height 500.0)
-  )
+  ;; Gebruik altijd hoogte 500
+  (setq text_height 500.0)
 
   ;; Maak tekst met ENTMAKE (direct entity maken, geen command prompts!)
   ;; Dit voorkomt problemen met text styles en spaties in tekst
@@ -314,7 +309,7 @@
     )
   )
 
-  (princ "\n✓ Watermark toegevoegd")
+  (princ "\n✓ Watermark toegevoegd (hoogte 500)")
 
   ;; ----------------------------------------------------------------------------
   ;; STAP 17: SAVE de cleaned tekening
@@ -330,15 +325,11 @@
   ;; ----------------------------------------------------------------------------
   (princ "\n\nOrigineel bestand openen...")
 
-  ;; Converteer backslashes naar forward slashes
+  ;; Converteer backslashes naar forward slashes (AutoCAD accepteert beide)
   (setq original_path_fixed (vl-string-translate "\\" "/" original_path))
 
-  ;; Embed quotes in de path string zodat AutoCAD het als 1 argument ziet
-  ;; Dit is nodig voor paden met spaties: "C:/path with spaces/file.dwg"
-  (setq original_path_quoted (strcat "\"" original_path_fixed "\""))
-
-  ;; Open origineel bestand - path is nu gequote
-  (command "._OPEN" original_path_quoted)
+  ;; Open origineel bestand - GEEN quotes toevoegen, command doet dat zelf!
+  (command "._OPEN" original_path_fixed)
 
   ;; Wacht tot open klaar is
   (while (> (getvar "CMDACTIVE") 0) (command))
