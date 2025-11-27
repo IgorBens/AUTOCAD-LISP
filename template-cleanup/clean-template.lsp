@@ -12,7 +12,7 @@
 ;; ============================================================================
 
 (defun C:CLEANTEMPLATE (/ dwg_name dwg_prefix dwg_titled base_name new_name new_path original_path
-                          original_path_fixed keep_ss all_ss keep_list ent i delete_count
+                          original_path_fixed original_path_quoted keep_ss all_ss keep_list ent i delete_count
                           layout_name layout_list layout_count all_layers layer_name answer
                           text_pt text_height)
 
@@ -298,22 +298,21 @@
     (setq text_height 500.0)
   )
 
-  ;; Voeg tekst toe met TEXT command (correcte parameter volgorde!)
-  (command "._TEXT" text_pt text_height "0" "CLEAN DWG")
-
-  ;; Wacht tot command klaar is
-  (while (> (getvar "CMDACTIVE") 0) (command))
-
-  ;; Maak de tekst rood (kleur 1)
-  (setq last_text (entlast))
-  (setq text_data (entget last_text))
-
-  ;; Voeg kleur toe (rood = 62, waarde 1)
-  (if (assoc 62 text_data)
-    (setq text_data (subst (cons 62 1) (assoc 62 text_data) text_data))
-    (setq text_data (append text_data (list (cons 62 1))))
+  ;; Maak tekst met ENTMAKE (direct entity maken, geen command prompts!)
+  ;; Dit voorkomt problemen met text styles en spaties in tekst
+  (entmake
+    (list
+      (cons 0 "TEXT")               ; Entity type
+      (cons 10 text_pt)             ; Insertion point
+      (cons 40 text_height)         ; Text height
+      (cons 1 "CLEAN DWG")          ; Text string
+      (cons 50 0.0)                 ; Rotation angle (0 degrees)
+      (cons 62 1)                   ; Color number (1 = red)
+      (cons 72 1)                   ; Horizontal justification (1 = center)
+      (cons 73 2)                   ; Vertical justification (2 = middle)
+      (cons 11 text_pt)             ; Alignment point (for justified text)
+    )
   )
-  (entmod text_data)
 
   (princ "\n✓ Watermark toegevoegd")
 
@@ -331,12 +330,15 @@
   ;; ----------------------------------------------------------------------------
   (princ "\n\nOrigineel bestand openen...")
 
-  ;; Converteer backslashes naar forward slashes (AutoCAD accepteert beide)
-  ;; Forward slashes werken beter met spaties!
+  ;; Converteer backslashes naar forward slashes
   (setq original_path_fixed (vl-string-translate "\\" "/" original_path))
 
-  ;; Open origineel bestand met forward slashes
-  (command "._OPEN" original_path_fixed)
+  ;; Embed quotes in de path string zodat AutoCAD het als 1 argument ziet
+  ;; Dit is nodig voor paden met spaties: "C:/path with spaces/file.dwg"
+  (setq original_path_quoted (strcat "\"" original_path_fixed "\""))
+
+  ;; Open origineel bestand - path is nu gequote
+  (command "._OPEN" original_path_quoted)
 
   ;; Wacht tot open klaar is
   (while (> (getvar "CMDACTIVE") 0) (command))
