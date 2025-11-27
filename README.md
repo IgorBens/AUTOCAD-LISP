@@ -1,67 +1,110 @@
 # AUTOCAD-LISP
 
-AutoCAD LISP scripts voor vloerverwarming en template beheer.
+AutoCAD LISP scripts voor verschillende taken. Elk project heeft zijn eigen folder.
 
-## Scripts
+## 📁 Repository Structuur
 
-### 1. vloerverwarming.lsp
-Automatisch vloerverwarming kringen maken.
-
-**Gebruik:**
-1. Laad het script in AutoCAD: `(load "vloerverwarming.lsp")`
-2. Type `VV` in de command line
-3. Selecteer een object (rechthoek, polyline, etc.)
-4. Geef offset afstand op (bijv. 100 of 150mm)
-
-**Functionaliteit:**
-- Maakt automatisch 50mm contour naar binnen (als rand)
-- Offset vanaf die contour verder naar binnen zoveel mogelijk keer
-
-### 2. clean-template.lsp
-DWG template schoonmaken door ongewenste elementen te verwijderen.
-
-**Gebruik:**
-1. Open je template DWG in AutoCAD
-2. Laad het script: `(load "clean-template.lsp")`
-3. Type `CLEANTEMPLATE` in de command line
-4. Bevestig de actie
-
-**Functionaliteit:**
-- Verwijdert alle elementen BEHALVE de layers die je wilt behouden
-- Standaard behouden layers:
-  - VLOERVERWARMING (floor heating)
-  - MUREN / WANDEN (walls)
-  - COLLECTOR
-  - LEIDINGEN (pipes)
-- Purge alle ongebruikte blocks, styles, layers, etc.
-- Audit de tekening voor errors
-
-**Aanpassen:**
-Open `clean-template.lsp` en pas de `keep_layers` lijst aan (regel 16-24) met jouw specifieke layer namen.
-
-## Installatie
-
-### In AutoCAD
-```lisp
-(load "C:/path/to/vloerverwarming.lsp")
-(load "C:/path/to/clean-template.lsp")
+```
+AUTOCAD-LISP/
+├── vloerverwarming/          # Vloerverwarming kringen automatisch maken
+│   └── vloerverwarming.lsp
+├── template-cleanup/         # DWG templates schoonmaken
+│   └── clean-template.lsp
+└── README.md                 # Dit bestand
 ```
 
-### Autoload (acaddoc.lsp)
-Maak een `acaddoc.lsp` bestand in je AutoCAD support folder:
+---
+
+## 🔥 Vloerverwarming
+
+**Locatie:** `vloerverwarming/vloerverwarming.lsp`
+
+### Gebruik
+1. Laad: `(load "vloerverwarming/vloerverwarming.lsp")`
+2. Type: `VV`
+3. Selecteer object (rechthoek, polyline)
+4. Geef offset afstand (bijv. 100 of 150mm)
+
+### Wat doet het?
+- Maakt 50mm contour naar binnen (als rand)
+- Offset loops naar binnen toe tot geen ruimte meer
+
+---
+
+## 🧹 Template Cleanup
+
+**Locatie:** `template-cleanup/clean-template.lsp`
+
+### Gebruik
+1. Open je DWG template in AutoCAD
+2. Laad: `(load "template-cleanup/clean-template.lsp")`
+3. Type: `CLEANTEMPLATE`
+4. **Selecteer** alle elementen die je wilt **BEHOUDEN** (vloerverwarming, muren, collectors, etc.)
+5. Bevestig met "Ja"
+
+### Wat doet het?
+✅ Vraagt je om elementen te selecteren die je wilt behouden
+❌ Verwijdert ALLES wat je NIET selecteerde
+🗑️ Verwijdert alle ongebruikte layout tabs (Layout1, Layout2, etc.)
+🧹 Purge ALLES (blocks, layers, styles, materials, etc.)
+🔍 Audit de tekening voor errors
+
+**Perfecte workflow:**
+1. Window-select je vloerverwarming
+2. Shift+Window-select je muren
+3. Shift+Click collectors en andere elementen
+4. Run CLEANTEMPLATE
+5. Klaar! Alles wat je niet selecteerde is weg
+
+---
+
+## 🚀 Installatie
+
+### In AutoCAD (Handmatig)
 ```lisp
-(load "C:/path/to/vloerverwarming.lsp")
-(load "C:/path/to/clean-template.lsp")
-(princ "\nCustom scripts geladen!")
+(load "C:/pad/naar/AUTOCAD-LISP/vloerverwarming/vloerverwarming.lsp")
+(load "C:/pad/naar/AUTOCAD-LISP/template-cleanup/clean-template.lsp")
 ```
 
-## Buiten AutoCAD gebruiken
+### Automatisch laden (acaddoc.lsp)
+Maak `acaddoc.lsp` in je AutoCAD support folder:
+```lisp
+(load "C:/pad/naar/AUTOCAD-LISP/vloerverwarming/vloerverwarming.lsp")
+(load "C:/pad/naar/AUTOCAD-LISP/template-cleanup/clean-template.lsp")
+(princ "\nCustom scripts geladen: VV, CLEANTEMPLATE")
+```
 
-Om deze scripts buiten AutoCAD te gebruiken, kun je:
+---
 
-1. **OpenLISP** - Open source LISP interpreter
-2. **AutoCAD Core Console** - Command line versie van AutoCAD
-3. **LibreCAD** - Ondersteunt beperkte LISP functionaliteit
-4. **BricsCAD** - Heeft volledige LISP support
+## 💡 Version Control
 
-De scripts gebruiken AutoCAD specifieke commando's (`command`, `entsel`, etc.), dus volledige compatibiliteit vereist een CAD engine.
+**Git Workflow:**
+- Elke wijziging wordt direct in het bestand gemaakt (geen nieuwe bestanden)
+- Push regelmatig naar GitHub zodat je collega's de updates krijgen
+- Gebruik `git pull` om de laatste versie binnen te halen
+
+**Voor nieuwe projecten:**
+1. Maak nieuwe folder: `mkdir nieuw-project`
+2. Maak je .lsp file: `nieuw-project/script.lsp`
+3. Update deze README
+4. Commit & push
+
+---
+
+## 🌐 Buiten AutoCAD gebruiken
+
+Deze scripts gebruiken AutoCAD-specifieke commando's (`command`, `ssget`, `entsel`), dus je hebt een CAD engine nodig:
+
+1. **AutoCAD Core Console** - Command line AutoCAD
+2. **BricsCAD** - Volledige LISP support
+3. **OpenDCL** - Open source optie (beperkt)
+
+---
+
+## 📝 Tips
+
+- **ALTIJD** eerst testen op een kopie van je template!
+- Gebruik `Ctrl+Z` (UNDO) als het niet goed gaat
+- Layout tabs worden automatisch verwijderd (behalve Model tab)
+- PURGE draait meerdere keren voor nested references
+
