@@ -12,7 +12,7 @@
 ;; ============================================================================
 
 (defun C:CLEANTEMPLATE (/ dwg_name dwg_prefix dwg_titled base_name new_name new_path original_path
-                          keep_ss all_ss keep_list ent i delete_count
+                          original_path_fixed keep_ss all_ss keep_list ent i delete_count
                           layout_name layout_list layout_count all_layers layer_name answer
                           text_pt text_height)
 
@@ -327,10 +327,19 @@
   (while (> (getvar "CMDACTIVE") 0) (command))
 
   ;; ----------------------------------------------------------------------------
-  ;; STAP 18: Klaar - blijf in clean versie
+  ;; STAP 18: Open origineel bestand opnieuw (beide open!)
   ;; ----------------------------------------------------------------------------
-  ;; Origineel blijft op de achtergrond open (door SAVEAS)
-  ;; User kan switchen via Ctrl+Tab of Window menu
+  (princ "\n\nOrigineel bestand openen...")
+
+  ;; Converteer backslashes naar forward slashes (AutoCAD accepteert beide)
+  ;; Forward slashes werken beter met spaties!
+  (setq original_path_fixed (vl-string-translate "\\" "/" original_path))
+
+  ;; Open origineel bestand met forward slashes
+  (command "._OPEN" original_path_fixed)
+
+  ;; Wacht tot open klaar is
+  (while (> (getvar "CMDACTIVE") 0) (command))
 
   ;; ----------------------------------------------------------------------------
   ;; Klaar!
@@ -345,11 +354,11 @@
   (princ "\n  - Volledig gepurged")
   (princ "\n  - 'CLEAN DWG' watermark toegevoegd")
   (princ "\n")
-  (princ (strcat "\n✓ Origineel intact: " dwg_name))
+  (princ (strcat "\n✓ Origineel geopend: " dwg_name))
   (princ (strcat "\n✓ Cleaned versie opgeslagen: " new_name))
+  (princ "\n✓ Beide bestanden zijn nu open!")
   (princ "\n")
-  (princ "\nJe zit nu in de CLEAN versie (met watermark)")
-  (princ "\nOrigineel is op achtergrond - gebruik Ctrl+Tab of Window menu om te wisselen")
+  (princ "\nTip: Gebruik Ctrl+Tab of Window menu om te wisselen tussen bestanden")
   (princ "\n")
   (princ)
 )
