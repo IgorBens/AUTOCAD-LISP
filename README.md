@@ -1,41 +1,53 @@
 # AUTOCAD-LISP
 
-AutoCAD LISP scripts collection - each project in its own folder.
+AutoCAD LISP scripts collection - organized by workflow.
 
 ## Projects
 
-### 🔥 [vloerverwarming](./vloerverwarming/)
-Automatic underfloor heating circuit generator
-- Creates 50mm inner contour
+### 🖊️ [vloerverwarming-tekenen](./vloerverwarming-tekenen/)
+**Draw floor heating circuits** - Use at start of project
+- Creates 50mm inner contour from zone
 - Generates offset loops for heating circuits
+- Automatically assigns to correct layers
 - Command: `VV`
 
 ### 📐 [vloerverwarming-oppervlakte](./vloerverwarming-oppervlakte/)
-Floor heating area calculator
+**Calculate floor heating area** - Use at end of drawing
 - Select multiple floor heating polylines
-- Calculates area of each polyline
-- Shows total area in m²
+- Calculates total area in m²
+- Works with non-closed polylines
 - Command: `VVO`
+
+### 🧹 [template-cleanup](./template-cleanup/)
+**Clean AutoCAD template** - Use at end of project
+- Cleans up .dwg file for final delivery
+- Removes unnecessary elements
+- Command: `CLEANTEMPLATE`
+
+## Workflow
+
+1. **Start:** Use `vloerverwarming-tekenen` to draw floor heating
+2. **Calculate:** Use `vloerverwarming-oppervlakte` to get total area
+3. **Finish:** Use `template-cleanup` to prepare final .dwg
 
 ## Structure
 
-Each project lives in its own folder:
 ```
 /
-├── vloerverwarming/
+├── vloerverwarming-tekenen/
 │   └── vloerverwarming.lsp
 ├── vloerverwarming-oppervlakte/
-│   └── oppervlakte.lsp
-├── [next-project]/
-│   └── ...
+│   └── area-calculator.lsp
+├── template-cleanup/
+│   └── clean-template.lsp
 └── README.md
 ```
 
 ## Usage
 
-1. Load the desired `.lsp` file in AutoCAD: `(load "path/to/script.lsp")`
-2. Use the command listed in the project description
+Load the desired `.lsp` file in AutoCAD:
+```lisp
+(load "path/to/script.lsp")
+```
 
-## Adding New Projects
-
-Just create a new folder for each project and add your `.lsp` files there!
+Then use the command listed in the project description.
