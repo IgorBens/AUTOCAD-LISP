@@ -2,7 +2,7 @@
 ;; This script calculates the total area covered by floor heating polylines
 ;; The floor heating consists of polylines that go out and come back, forming loops
 
-(defun c:FHAREA (/ ss i ent obj total-area pline-area)
+(defun c:FHAREA (/ ss i ent obj total-area pline-area area-m2)
   ;; Initialize total area
   (setq total-area 0.0)
 
@@ -21,14 +21,16 @@
         ;; Check if polyline is closed
         (if (= (vlax-get-property obj 'Closed) :vlax-true)
           (progn
-            ;; Get area of closed polyline
+            ;; Get area of closed polyline (in mm²)
             (setq pline-area (vlax-get-property obj 'Area))
-            (setq total-area (+ total-area pline-area))
+            ;; Convert mm² to m² (divide by 1,000,000)
+            (setq area-m2 (/ pline-area 1000000.0))
+            (setq total-area (+ total-area area-m2))
             (princ (strcat "\nPolyline " (itoa (1+ i)) " area: "
-                          (rtos pline-area 2 2) " sq units"))
+                          (rtos area-m2 2 2) " m²"))
           )
           (progn
-            ;; For open polylines, calculate approximate area
+            ;; For open polylines, cannot calculate area
             (princ (strcat "\nWarning: Polyline " (itoa (1+ i))
                           " is not closed. Skipping area calculation."))
           )
@@ -39,7 +41,7 @@
       ;; Display total area
       (princ (strcat "\n\n================================="))
       (princ (strcat "\nTotal Floor Heating Area: "
-                    (rtos total-area 2 2) " sq units"))
+                    (rtos total-area 2 2) " m²"))
       (princ (strcat "\n=================================\n"))
     )
     (princ "\nNo polylines selected.")
@@ -49,7 +51,7 @@
 )
 
 ;; Function to calculate area including both outgoing and return paths
-(defun c:FHAREA2 (/ ss i ent obj total-area width length pline-length)
+(defun c:FHAREA2 (/ ss i ent obj total-area width pline-length pline-area length-m area-m2)
   ;; Initialize total area
   (setq total-area 0.0)
 
@@ -57,8 +59,8 @@
   (princ "\nSelect floor heating polylines: ")
   (setq ss (ssget '((0 . "LWPOLYLINE,POLYLINE"))))
 
-  ;; Get width between outgoing and return paths
-  (setq width (getreal "\nEnter distance between outgoing and return paths (mm): "))
+  ;; Get width between outgoing and return paths (in mm)
+  (setq width (getreal "\nEnter width of heating path (mm): "))
 
   (if (and ss width)
     (progn
@@ -68,17 +70,20 @@
         (setq ent (ssname ss i))
         (setq obj (vlax-ename->vla-object ent))
 
-        ;; Get length of polyline
+        ;; Get length of polyline (in mm)
         (setq pline-length (vlax-get-property obj 'Length))
+        ;; Convert length from mm to m
+        (setq length-m (/ pline-length 1000.0))
 
-        ;; Calculate area as length * width (for one side)
-        ;; Multiply by 2 if counting both outgoing and return
+        ;; Calculate area as length * width (in mm²)
         (setq pline-area (* pline-length width))
-        (setq total-area (+ total-area pline-area))
+        ;; Convert area from mm² to m²
+        (setq area-m2 (/ pline-area 1000000.0))
+        (setq total-area (+ total-area area-m2))
 
         (princ (strcat "\nPolyline " (itoa (1+ i))
-                      " - Length: " (rtos pline-length 2 2)
-                      " - Area: " (rtos pline-area 2 2) " sq units"))
+                      " - Length: " (rtos length-m 2 2) " m"
+                      " - Area: " (rtos area-m2 2 2) " m²"))
 
         (setq i (1+ i))
       )
@@ -86,7 +91,7 @@
       ;; Display total area
       (princ (strcat "\n\n================================="))
       (princ (strcat "\nTotal Floor Heating Area: "
-                    (rtos total-area 2 2) " sq units"))
+                    (rtos total-area 2 2) " m²"))
       (princ (strcat "\n=================================\n"))
     )
     (princ "\nOperation cancelled or invalid input.")
