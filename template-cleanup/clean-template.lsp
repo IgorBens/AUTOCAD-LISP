@@ -315,10 +315,18 @@
   (while (> (getvar "CMDACTIVE") 0) (command))
 
   ;; ----------------------------------------------------------------------------
-  ;; STAP 18: Klaar - blijf in clean versie
+  ;; STAP 18: Open origineel bestand opnieuw (beide open!)
   ;; ----------------------------------------------------------------------------
-  ;; Opmerking: Origineel bestand proberen te openen geeft vaak SDI mode errors
-  ;; Gebruiker kan handmatig switchen als origineel nog open is, of het opnieuw openen
+  (princ "\n\nOrigineel bestand openen...")
+
+  ;; Converteer backslashes naar forward slashes (AutoCAD accepteert beide)
+  (setq original_path_fixed (vl-string-translate "\\" "/" original_path))
+
+  ;; Open origineel bestand - gebruik FILEOPEN (beter voor LISP dan OPEN)
+  (command "._FILEOPEN" original_path_fixed)
+
+  ;; Wacht tot open klaar is
+  (while (> (getvar "CMDACTIVE") 0) (command))
 
   ;; ----------------------------------------------------------------------------
   ;; Klaar!
@@ -336,8 +344,9 @@
   (princ (strcat "\n✓ Origineel intact: " dwg_name))
   (princ (strcat "\n✓ Cleaned versie opgeslagen: " new_name))
   (princ "\n")
-  (princ "\nJe zit nu in de CLEAN versie (met rode watermark)")
-  (princ (strcat "\nOrigineel bestand: " original_path))
+  (princ "\n📂 Beide bestanden zijn nu open:")
+  (princ (strcat "\n  - Origineel (zonder watermark): " dwg_name))
+  (princ (strcat "\n  - Cleaned (met rode watermark): " new_name))
   (princ "\n")
   (princ)
 )
