@@ -10,6 +10,13 @@ Automatic underfloor heating circuit generator
 - Generates offset loops for heating circuits
 - Command: `VV`
 
+### 📐 [vloerverwarming-oppervlakte](./vloerverwarming-oppervlakte/)
+Floor heating area calculator
+- Select multiple floor heating polylines
+- Calculates area of each polyline
+- Shows total area in m²
+- Command: `VVO`
+
 ## Structure
 
 Each project lives in its own folder:
@@ -17,6 +24,8 @@ Each project lives in its own folder:
 /
 ├── vloerverwarming/
 │   └── vloerverwarming.lsp
+├── vloerverwarming-oppervlakte/
+│   └── oppervlakte.lsp
 ├── [next-project]/
 │   └── ...
 └── README.md
