@@ -2,7 +2,7 @@
 ;; This script calculates the total area covered by floor heating polylines
 ;; The floor heating consists of polylines that go out and come back, forming loops
 
-(defun c:FHAREA (/ ss i ent obj total-area pline-area)
+(defun c:FHAREA (/ ss i ent obj total-area pline-area room-name poly-count)
   ;; Initialize total area
   (setq total-area 0.0)
 
@@ -41,6 +41,17 @@
       (princ (strcat "\nTotal Floor Heating Area: "
                     (rtos total-area 2 2) " sq units"))
       (princ (strcat "\n=================================\n"))
+
+      ;; Collect data for summary (if summary module is loaded)
+      (setq poly-count (sslength ss))
+      (if (and (boundp 'td-add-area) td-add-area)
+        (progn
+          (setq room-name (getstring T "\nGeef ruimte naam voor samenvatting (of Enter om over te slaan): "))
+          (if (and room-name (> (strlen room-name) 0))
+            (td-add-area room-name total-area poly-count)
+          )
+        )
+      )
     )
     (princ "\nNo polylines selected.")
   )
@@ -49,7 +60,7 @@
 )
 
 ;; Function to calculate area including both outgoing and return paths
-(defun c:FHAREA2 (/ ss i ent obj total-area width length pline-length)
+(defun c:FHAREA2 (/ ss i ent obj total-area width length pline-length room-name poly-count)
   ;; Initialize total area
   (setq total-area 0.0)
 
@@ -88,6 +99,17 @@
       (princ (strcat "\nTotal Floor Heating Area: "
                     (rtos total-area 2 2) " sq units"))
       (princ (strcat "\n=================================\n"))
+
+      ;; Collect data for summary (if summary module is loaded)
+      (setq poly-count (sslength ss))
+      (if (and (boundp 'td-add-area) td-add-area)
+        (progn
+          (setq room-name (getstring T "\nGeef ruimte naam voor samenvatting (of Enter om over te slaan): "))
+          (if (and room-name (> (strlen room-name) 0))
+            (td-add-area room-name total-area poly-count)
+          )
+        )
+      )
     )
     (princ "\nOperation cancelled or invalid input.")
   )

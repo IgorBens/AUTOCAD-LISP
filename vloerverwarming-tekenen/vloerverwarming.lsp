@@ -39,7 +39,7 @@
 ;; ----------------------------------------------------------------------------
 (defun C:VV (/ obj offset_dist continue current_obj new_obj loop_count
               obj_data vert_list minx miny maxx maxy pt center_pt last_ent item
-              contour_obj layer-zone layer-vv)
+              contour_obj layer-zone layer-vv zone-name)
 
   (princ "\n=== VLOERVERWARMING KRINGEN ===")
 
@@ -177,6 +177,20 @@
   )
 
   (princ (strcat "\n\nKlaar! 50mm rand + " (itoa loop_count) " vloerverwarming kringen gemaakt."))
+
+  ;; ----------------------------------------------------------------------------
+  ;; STAP 7: Verzamel data voor samenvatting (optioneel)
+  ;; ----------------------------------------------------------------------------
+  (if (and (boundp 'td-add-zone) td-add-zone)
+    (progn
+      (princ "\n")
+      (setq zone-name (getstring T "\nGeef zone naam voor samenvatting (of Enter om over te slaan): "))
+      (if (and zone-name (> (strlen zone-name) 0))
+        (td-add-zone zone-name loop_count offset_dist)
+      )
+    )
+  )
+
   (princ "\n=========================")
   (princ)
 )
