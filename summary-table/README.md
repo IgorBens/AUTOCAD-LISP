@@ -42,6 +42,28 @@ Enter project name (optional): Residential Building
 
 ---
 
+### TD_ADDZONE
+Add an existing floor heating zone to the summary (for retroactively documenting already-drawn zones).
+
+**Usage:**
+```
+Command: TD_ADDZONE
+Geef zone naam: Woonkamer
+Selecteer alle vloerverwarming kringen voor zone 'Woonkamer': [select polylines]
+Geef afstand tussen kringen in mm (of Enter om over te slaan): 150
+```
+
+**What it does:**
+1. Prompts for zone name
+2. Lets you select all floor heating loop polylines in that zone
+3. Counts the number of loops automatically
+4. Optionally asks for the spacing between loops
+5. Adds the zone data to the summary
+
+**Use case:** Perfect for existing drawings where zones were already created with VV (or manually) but weren't added to the summary at the time.
+
+---
+
 ### TD_SUMTAB
 Create the summary table in a SUMMARY layout.
 
@@ -156,6 +178,46 @@ Press Enter to skip data collection.
    TD_SUMTAB
    [click insertion point in drawing]
    ```
+
+### Working with Existing Drawings
+
+If you have floor heating already drawn and want to create a summary retroactively:
+
+1. **Load the summary module**:
+   ```lisp
+   (load "summary-table/summary-table.lsp")
+   (load "vloerverwarming-oppervlakte/area-calculator.lsp")
+   ```
+
+2. **Set project info** (optional):
+   ```
+   TD_PROJECT
+   ```
+
+3. **Add existing zones** (one by one):
+   ```
+   TD_ADDZONE
+   Zone name: Woonkamer
+   [select all heating loops in this zone]
+   Spacing: 150
+   ```
+
+4. **Measure existing areas** (for each room):
+   ```
+   FHAREA
+   [select polylines]
+   Room name: Woonkamer
+   ```
+
+5. **Repeat** steps 3-4 for each zone/room
+
+6. **Generate summary**:
+   ```
+   TD_SUMTAB
+   [click insertion point]
+   ```
+
+**Tip:** Use layer filters or selection sets to make selecting loops easier when dealing with complex existing drawings.
 
 ### Advanced Workflow
 

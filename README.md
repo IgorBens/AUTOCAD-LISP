@@ -21,9 +21,10 @@ AutoCAD LISP scripts collection - organized by workflow.
 ### 📊 [summary-table](./summary-table/)
 **Generate project summary table** - Use throughout project
 - Collects data from VV and FHAREA commands
+- Add existing zones retroactively with TD_ADDZONE
 - Generates comprehensive summary table
 - Creates dedicated SUMMARY layout
-- Commands: `TD_PROJECT`, `TD_SUMTAB`, `TD_SHOWDATA`, `TD_CLEARDATA`
+- Commands: `TD_PROJECT`, `TD_ADDZONE`, `TD_SUMTAB`, `TD_SHOWDATA`, `TD_CLEARDATA`
 
 ### 🧹 [template-cleanup](./template-cleanup/)
 **Clean AutoCAD template** - Use at end of project

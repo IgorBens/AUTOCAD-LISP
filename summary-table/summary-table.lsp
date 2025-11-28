@@ -315,6 +315,63 @@
 )
 
 ;;;; ========================================
+;;;; HELPER COMMAND: TD_ADDZONE
+;;;; ========================================
+;;; Add existing floor heating zone to summary
+
+(defun C:TD_ADDZONE (/ zone-name ss loop-count spacing-input spacing)
+  (princ "\n========================================")
+  (princ "\n  ADD EXISTING ZONE TO SUMMARY")
+  (princ "\n========================================")
+
+  ;; Get zone name first
+  (setq zone-name (getstring T "\nGeef zone naam: "))
+
+  (if (or (null zone-name) (= (strlen zone-name) 0))
+    (progn
+      (princ "\n** Cancelled - no name entered **")
+      (princ)
+      (exit)
+    )
+  )
+
+  ;; Select floor heating polylines in this zone
+  (princ (strcat "\nSelecteer alle vloerverwarming kringen voor zone '" zone-name "':"))
+  (setq ss (ssget '((0 . "LWPOLYLINE,POLYLINE"))))
+
+  (if (null ss)
+    (progn
+      (princ "\n** Cancelled - no polylines selected **")
+      (princ)
+      (exit)
+    )
+  )
+
+  ;; Count loops
+  (setq loop-count (sslength ss))
+
+  ;; Ask for spacing (optional)
+  (princ "\nGeef afstand tussen kringen in mm (of Enter om over te slaan): ")
+  (setq spacing-input (getdist))
+
+  (if spacing-input
+    (setq spacing spacing-input)
+    (setq spacing 0.0)
+  )
+
+  ;; Add zone to summary
+  (td-add-zone zone-name loop-count spacing)
+
+  (princ (strcat "\n\n** Zone '" zone-name "' toegevoegd! **"))
+  (princ (strcat "\n  - Aantal kringen: " (itoa loop-count)))
+  (if (> spacing 0)
+    (princ (strcat "\n  - Afstand: " (rtos spacing 2 0) "mm"))
+  )
+  (princ "\n========================================")
+  (princ)
+)
+
+;;;; ========================================
 ;;;; HELPER COMMAND: TD_SHOWDATA
 ;;;; ========================================
 ;;; Display collected data in command line
@@ -398,6 +455,7 @@
 (princ "\n========================================")
 (princ "\nCommands available:")
 (princ "\n  TD_PROJECT   - Set project information")
+(princ "\n  TD_ADDZONE   - Add existing zone to summary")
 (princ "\n  TD_SUMTAB    - Create summary table")
 (princ "\n  TD_SHOWDATA  - Show collected data")
 (princ "\n  TD_CLEARDATA - Clear all data")
