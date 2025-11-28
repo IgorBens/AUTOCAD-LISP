@@ -12,7 +12,7 @@
 ;; ============================================================================
 
 (defun C:CLEANTEMPLATE (/ dwg_name dwg_prefix dwg_titled base_name new_name new_path original_path
-                          original_path_fixed keep_ss all_ss keep_list ent i delete_count
+                          keep_ss all_ss keep_list ent i delete_count
                           layout_name layout_list layout_count all_layers layer_name answer
                           text_pt text_height)
 
@@ -315,18 +315,10 @@
   (while (> (getvar "CMDACTIVE") 0) (command))
 
   ;; ----------------------------------------------------------------------------
-  ;; STAP 18: Open origineel bestand opnieuw (beide open!)
+  ;; STAP 18: Klaar - blijf in clean versie
   ;; ----------------------------------------------------------------------------
-  (princ "\n\nOrigineel bestand openen...")
-
-  ;; Converteer backslashes naar forward slashes (AutoCAD accepteert beide)
-  (setq original_path_fixed (vl-string-translate "\\" "/" original_path))
-
-  ;; Open origineel bestand - gebruik FILEOPEN (beter voor LISP dan OPEN)
-  (command "._FILEOPEN" original_path_fixed)
-
-  ;; Wacht tot open klaar is
-  (while (> (getvar "CMDACTIVE") 0) (command))
+  ;; Opmerking: Origineel bestand proberen te openen geeft vaak SDI mode errors
+  ;; Gebruiker kan handmatig switchen als origineel nog open is, of het opnieuw openen
 
   ;; ----------------------------------------------------------------------------
   ;; Klaar!
@@ -341,11 +333,11 @@
   (princ "\n  - Volledig gepurged")
   (princ "\n  - 'CLEAN DWG' watermark toegevoegd")
   (princ "\n")
-  (princ (strcat "\n✓ Origineel geopend: " dwg_name))
+  (princ (strcat "\n✓ Origineel intact: " dwg_name))
   (princ (strcat "\n✓ Cleaned versie opgeslagen: " new_name))
-  (princ "\n✓ Beide bestanden zijn nu open!")
   (princ "\n")
-  (princ "\nTip: Gebruik Ctrl+Tab of Window menu om te wisselen tussen bestanden")
+  (princ "\nJe zit nu in de CLEAN versie (met rode watermark)")
+  (princ (strcat "\nOrigineel bestand: " original_path))
   (princ "\n")
   (princ)
 )
