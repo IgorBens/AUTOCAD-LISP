@@ -88,7 +88,10 @@
 ;; Arguments:
 ;;   room-record - Association list representing the room
 ;; Returns: nil
-(defun td-print-room-summary (room-record / )
+(defun td-print-room-summary (room-record / area-m2)
+  ;; Convert area from mm² to m²
+  (setq area-m2 (/ (cdr (assoc 'AREA room-record)) 1000000.0))
+
   (princ "\n========================================")
   (princ "\n Room Defined Successfully!")
   (princ "\n========================================")
@@ -97,7 +100,7 @@
   (princ (strcat "\n Diameter      : " (itoa (cdr (assoc 'DIAMETER room-record))) " mm"))
   (princ (strcat "\n Spacing       : " (itoa (cdr (assoc 'SPACING room-record))) " mm"))
   (princ (strcat "\n Floor Type    : " (cdr (assoc 'FLOOR room-record))))
-  (princ (strcat "\n Area          : " (rtos (cdr (assoc 'AREA room-record)) 2 2) " sq units"))
+  (princ (strcat "\n Area          : " (rtos area-m2 2 2) " m²"))
   (princ "\n========================================")
   (princ)
 )
@@ -277,9 +280,9 @@
   ;; Sort by X coordinate (second element of each pair)
   (setq sorted-data
     (vl-sort loop-data
-      '(lambda (a b)
+      (function (lambda (a b)
         (< (cdr a) (cdr b))
-      )
+      ))
     )
   )
 
@@ -294,7 +297,7 @@
 ;;   room-name - String: Name of the room
 ;;   loop-records - List of loop records
 ;; Returns: nil
-(defun td-print-loops-summary (room-name loop-records / total-length)
+(defun td-print-loops-summary (room-name loop-records / total-length length-m)
   (setq total-length 0.0)
 
   (princ "\n========================================")
@@ -305,13 +308,15 @@
   (princ "\n----------------------------------------")
 
   (foreach loop loop-records
+    ;; Convert length from mm to m
+    (setq length-m (/ (cdr (assoc 'LENGTH loop)) 1000.0))
     (princ (strcat "\n Loop " (cdr (assoc 'NAME loop))
-                   ": " (rtos (cdr (assoc 'LENGTH loop)) 2 2) " units"))
+                   ": " (rtos length-m 2 2) " m"))
     (setq total-length (+ total-length (cdr (assoc 'LENGTH loop))))
   )
 
   (princ "\n----------------------------------------")
-  (princ (strcat "\n Total Length  : " (rtos total-length 2 2) " units"))
+  (princ (strcat "\n Total Length  : " (rtos (/ total-length 1000.0) 2 2) " m"))
   (princ "\n========================================")
   (princ)
 )
@@ -408,10 +413,10 @@
 ;;; UTILITY COMMANDS
 ;;;============================================================================
 
-;; Command: C:TD_LISTROOMSV
+;; Command: C:TD_LISTROOMS
 ;; Description: List all defined rooms
 ;; Usage: Type TD_LISTROOMS at the AutoCAD command line
-(defun C:TD_LISTROOMS ( / )
+(defun C:TD_LISTROOMS ( / area-m2)
   (princ "\n========================================")
   (princ "\n Defined Rooms")
   (princ "\n========================================")
@@ -419,9 +424,11 @@
   (if (= (length *td-rooms*) 0)
     (princ "\n No rooms defined yet.")
     (foreach room *td-rooms*
+      ;; Convert area from mm² to m²
+      (setq area-m2 (/ (cdr (assoc 'AREA room)) 1000000.0))
       (princ (strcat "\n " (cdr (assoc 'NAME room))
                      " - Collector: " (itoa (cdr (assoc 'COLLECTOR room)))
-                     " - Area: " (rtos (cdr (assoc 'AREA room)) 2 2) " sq units"))
+                     " - Area: " (rtos area-m2 2 2) " m²"))
     )
   )
 
@@ -432,7 +439,7 @@
 ;; Command: C:TD_LISTLOOPS
 ;; Description: List all defined loops
 ;; Usage: Type TD_LISTLOOPS at the AutoCAD command line
-(defun C:TD_LISTLOOPS ( / )
+(defun C:TD_LISTLOOPS ( / length-m)
   (princ "\n========================================")
   (princ "\n Defined Loops")
   (princ "\n========================================")
@@ -440,9 +447,11 @@
   (if (= (length *td-loops*) 0)
     (princ "\n No loops defined yet.")
     (foreach loop *td-loops*
+      ;; Convert length from mm to m
+      (setq length-m (/ (cdr (assoc 'LENGTH loop)) 1000.0))
       (princ (strcat "\n Loop " (cdr (assoc 'NAME loop))
                      " - Room: " (cdr (assoc 'ROOM loop))
-                     " - Length: " (rtos (cdr (assoc 'LENGTH loop)) 2 2) " units"))
+                     " - Length: " (rtos length-m 2 2) " m"))
     )
   )
 
