@@ -573,16 +573,16 @@
                     ;; Set attributes
                     (vlax-for att-obj (vlax-invoke block-obj 'GetAttributes)
                       (cond
-                        ;; Attribute LP
-                        ((= (strcase (vla-get-TagString att-obj)) "LP")
+                        ;; Attribute Legpatroon (LP value)
+                        ((= (strcase (vla-get-TagString att-obj)) "LEGPATROON")
                          (vla-put-TextString att-obj lp-value))
 
-                        ;; Attribute C (collector)
-                        ((= (strcase (vla-get-TagString att-obj)) "C")
+                        ;; Attribute Collector
+                        ((= (strcase (vla-get-TagString att-obj)) "COLLECTOR")
                          (vla-put-TextString att-obj collector-str))
 
-                        ;; Attribute K (index)
-                        ((= (strcase (vla-get-TagString att-obj)) "K")
+                        ;; Attribute Kringnummer (loop index)
+                        ((= (strcase (vla-get-TagString att-obj)) "KRINGNUMMER")
                          (vla-put-TextString att-obj index-str))
                       )
                     )
