@@ -267,7 +267,11 @@
 ;;   loop-ents - List of entity names
 ;; Returns: Sorted list of entity names
 (defun td-sort-loops-by-x (loop-ents / loop-data sorted-data sorted-ents)
+  (princ "\n[DEBUG td-sort] Entering sort function...")
+  (princ (strcat "\n[DEBUG td-sort] Input list length: " (itoa (length loop-ents))))
+
   ;; Create a list of (entity . x-coordinate) pairs
+  (princ "\n[DEBUG td-sort] Creating entity-coordinate pairs...")
   (setq loop-data
     (mapcar
       (function (lambda (ent)
@@ -276,8 +280,15 @@
       loop-ents
     )
   )
+  (princ (strcat "\n[DEBUG td-sort] Pairs created, length: " (itoa (length loop-data))))
+
+  ;; Print the first pair for debugging
+  (if (> (length loop-data) 0)
+    (princ (strcat "\n[DEBUG td-sort] First pair X-coord: " (rtos (cdar loop-data) 2 2)))
+  )
 
   ;; Sort by X coordinate (second element of each pair)
+  (princ "\n[DEBUG td-sort] About to call vl-sort...")
   (setq sorted-data
     (vl-sort loop-data
       (function (lambda (a b)
@@ -285,14 +296,17 @@
       ))
     )
   )
+  (princ "\n[DEBUG td-sort] vl-sort completed successfully")
 
   ;; Extract just the entity names
+  (princ "\n[DEBUG td-sort] Extracting entity names from sorted pairs...")
   (setq sorted-ents
     (mapcar
       (function (lambda (pair) (car pair)))
       sorted-data
     )
   )
+  (princ (strcat "\n[DEBUG td-sort] Extraction complete, final length: " (itoa (length sorted-ents))))
   sorted-ents
 )
 
@@ -371,32 +385,45 @@
     )
     (progn
       ;; Convert selection set to list of entity names
+      (princ "\n[DEBUG] Converting selection set to list...")
       (setq loop-count (sslength ss))
+      (princ (strcat "\n[DEBUG] Number of polylines selected: " (itoa loop-count)))
       (setq i 0)
       (repeat loop-count
         (setq loop-ents (cons (ssname ss i) loop-ents))
         (setq i (1+ i))
       )
       (setq loop-ents (reverse loop-ents))
+      (princ (strcat "\n[DEBUG] Entity list created, length: " (itoa (length loop-ents))))
 
       ;; Step 3: Sort loops from left to right (by X coordinate)
+      (princ "\n[DEBUG] About to sort loops by X coordinate...")
       (setq sorted-ents (td-sort-loops-by-x loop-ents))
+      (princ (strcat "\n[DEBUG] Sorting complete, sorted list length: " (itoa (length sorted-ents))))
 
       ;; Step 4: Process each loop
+      (princ "\n[DEBUG] Starting to process each loop...")
       (setq index 1)
       (setq new-loops '())
 
       (foreach loop-ent sorted-ents
+        (princ (strcat "\n[DEBUG] Processing loop " (itoa index) "..."))
+
         ;; Generate loop name
         (setq loop-name (strcat (itoa collector) "-" (itoa index)))
+        (princ (strcat "\n[DEBUG] Loop name: " loop-name))
 
         ;; Calculate length
+        (princ "\n[DEBUG] Calculating length...")
         (setq length (td-get-polyline-length loop-ent))
+        (princ (strcat "\n[DEBUG] Length calculated: " (if length (rtos length 2 2) "NIL")))
 
         (if length
           (progn
             ;; Add loop record
+            (princ "\n[DEBUG] Adding loop record...")
             (td-add-loop-record room-name collector index loop-name length loop-ent)
+            (princ "\n[DEBUG] Loop record added successfully")
             (setq new-loops (append new-loops (list (last *td-loops*))))
             (setq index (1+ index))
           )
@@ -405,10 +432,12 @@
       )
 
       ;; Step 5: Print summary
+      (princ "\n[DEBUG] About to print summary...")
       (if (> (length new-loops) 0)
         (td-print-loops-summary room-name new-loops)
         (princ "\nNo loops were successfully processed.")
       )
+      (princ "\n[DEBUG] TD_LOOPDEF completed successfully")
     )
   )
   (princ)
