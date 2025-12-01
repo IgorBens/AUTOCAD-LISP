@@ -184,6 +184,36 @@
   *td-loops*
 )
 
+;; Function: td-next-index-for-collector
+;; Description: Finds the next available index for a given collector
+;;              by looking at existing loops in *td-loops* and returning
+;;              the maximum INDEX + 1 for that collector
+;; Arguments:
+;;   collector-num - Integer: The collector number to check
+;; Returns: Integer: The next available index (starts at 1 if no loops exist)
+(defun td-next-index-for-collector (collector-num / max-index loop-record current-index)
+  ;; Start with max index at 0 (so first loop will be 1)
+  (setq max-index 0)
+
+  ;; Loop through all existing loops
+  (foreach loop-record *td-loops*
+    ;; Check if this loop belongs to the same collector
+    (if (= (cdr (assoc 'COLLECTOR loop-record)) collector-num)
+      (progn
+        ;; Get the index of this loop
+        (setq current-index (cdr (assoc 'INDEX loop-record)))
+        ;; Update max-index if this index is higher
+        (if (> current-index max-index)
+          (setq max-index current-index)
+        )
+      )
+    )
+  )
+
+  ;; Return the next available index
+  (+ max-index 1)
+)
+
 ;; Function: td-find-room-by-name
 ;; Description: Finds a room record by name
 ;; Arguments:
@@ -403,7 +433,9 @@
 
       ;; Step 4: Process each loop
       (princ "\n[DEBUG] Starting to process each loop...")
-      (setq index 1)
+      ;; Get the next available index for this collector (continues numbering from existing loops)
+      (setq index (td-next-index-for-collector collector))
+      (princ (strcat "\n[DEBUG] Starting index for collector " (itoa collector) ": " (itoa index)))
       (setq new-loops '())
 
       (foreach loop-ent sorted-ents
