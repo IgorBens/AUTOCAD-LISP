@@ -508,7 +508,7 @@
   (princ "\n=== Thermoduct Tools: Tag Loops ===")
 
   (setq block-name "0_07 TD - NUMMERING [Projects]")
-  (setq layer-name "VV_KRINGSYM")
+  (setq layer-name "0_20 TD - Nummering Kringen")
 
   ;; Step 1: Check if block exists
   (if (not (tblsearch "BLOCK" block-name))
