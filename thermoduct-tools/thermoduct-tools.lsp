@@ -224,7 +224,7 @@
 (defun td-find-loop-by-entity (loop-entity / found-loop)
   (setq found-loop nil)
   (foreach loop-record *td-loops*
-    (if (= (cdr (assoc 'ENTITY loop-record)) loop-entity)
+    (if (equal (cdr (assoc 'ENTITY loop-record)) loop-entity)
       (setq found-loop loop-record)
     )
   )
