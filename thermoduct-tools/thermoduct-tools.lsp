@@ -348,7 +348,7 @@
 ;; Description: Define loops (circuits) for a room
 ;; Usage: Type TD_LOOPDEF at the AutoCAD command line
 (defun C:TD_LOOPDEF ( / room-name room-record collector loop-ents sorted-ents
-                       index loop-ent length loop-name new-loops ss loop-count i use-default)
+                       index loop-ent loop-length loop-name new-loops ss loop-count i use-default)
   (princ "\n=== Thermoduct Tools: Define Loops ===")
 
   ;; Step 1: Get the room (for v1, just ask for room name)
@@ -415,14 +415,14 @@
 
         ;; Calculate length
         (princ "\n[DEBUG] Calculating length...")
-        (setq length (td-get-polyline-length loop-ent))
-        (princ (strcat "\n[DEBUG] Length calculated: " (if length (rtos length 2 2) "NIL")))
+        (setq loop-length (td-get-polyline-length loop-ent))
+        (princ (strcat "\n[DEBUG] Length calculated: " (if loop-length (rtos loop-length 2 2) "NIL")))
 
-        (if length
+        (if loop-length
           (progn
             ;; Add loop record
             (princ "\n[DEBUG] Adding loop record...")
-            (td-add-loop-record room-name collector index loop-name length loop-ent)
+            (td-add-loop-record room-name collector index loop-name loop-length loop-ent)
             (princ "\n[DEBUG] Loop record added successfully")
             (setq new-loops (append new-loops (list (last *td-loops*))))
             (setq index (1+ index))
