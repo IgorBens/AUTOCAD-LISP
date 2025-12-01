@@ -564,8 +564,8 @@
                     ;; Set current layer to VV_KRINGSYM
                     (setvar "CLAYER" layer-name)
 
-                    ;; Insert the block
-                    (command "_.INSERT" block-name insert-point "" "" "")
+                    ;; Insert the block (use -INSERT to suppress attribute prompts)
+                    (command "_.-INSERT" block-name insert-point "" "" "")
 
                     ;; Get the inserted block
                     (setq block-obj (vlax-ename->vla-object (entlast)))
