@@ -507,7 +507,7 @@
                         block-obj att-obj)
   (princ "\n=== Thermoduct Tools: Tag Loops ===")
 
-  (setq block-name "VV_KRINGTAG")
+  (setq block-name "0_07 TD - NUMMERING [Projects]")
   (setq layer-name "VV_KRINGSYM")
 
   ;; Step 1: Check if block exists
