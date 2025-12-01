@@ -24,6 +24,14 @@ AutoCAD LISP scripts collection - organized by workflow.
 - Removes unnecessary elements
 - Command: `CLEANTEMPLATE`
 
+### 🔧 [thermoduct-tools](./thermoduct-tools/)
+**Floor heating design library** - Structured data management
+- Define rooms with heating parameters
+- Attach loops (circuits) to rooms
+- Measure pipe lengths and generate summaries
+- No auto-drawing - you maintain full control
+- Commands: `TD_ROOMDEF`, `TD_LOOPDEF`, `TD_LISTROOMS`, `TD_LISTLOOPS`
+
 ## Workflow
 
 1. **Start:** Use `vloerverwarming-tekenen` to draw floor heating
@@ -40,6 +48,9 @@ AutoCAD LISP scripts collection - organized by workflow.
 │   └── area-calculator.lsp
 ├── template-cleanup/
 │   └── clean-template.lsp
+├── thermoduct-tools/
+│   ├── thermoduct-tools.lsp
+│   └── README.md
 └── README.md
 ```
 
