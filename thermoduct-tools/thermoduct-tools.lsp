@@ -270,9 +270,9 @@
   ;; Create a list of (entity . x-coordinate) pairs
   (setq loop-data
     (mapcar
-      '(lambda (ent)
+      (function (lambda (ent)
         (cons ent (car (td-get-polyline-center ent)))
-      )
+      ))
       loop-ents
     )
   )
