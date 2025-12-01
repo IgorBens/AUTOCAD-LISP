@@ -165,16 +165,18 @@
 ;;   collector    - Integer: Collector number
 ;;   index        - Integer: Loop index (1-based)
 ;;   loop-name    - String: Loop name (e.g., "1-1")
+;;   spacing      - Integer: Spacing in mm (e.g., 100, 150)
 ;;   length       - Real: Length of the loop polyline
 ;;   loop-ent     - Entity name: The polyline entity representing the loop
 ;; Returns: The updated *td-loops* list
-(defun td-add-loop-record (room-name collector index loop-name length loop-ent / loop-record)
+(defun td-add-loop-record (room-name collector index loop-name spacing length loop-ent / loop-record)
   (setq loop-record
     (list
       (cons 'ROOM room-name)
       (cons 'COLLECTOR collector)
       (cons 'INDEX index)
       (cons 'NAME loop-name)
+      (cons 'SPACING spacing)
       (cons 'LENGTH length)
       (cons 'ENTITY loop-ent)
     )
@@ -212,6 +214,21 @@
 
   ;; Return the next available index
   (+ max-index 1)
+)
+
+;; Function: td-find-loop-by-entity
+;; Description: Finds a loop record by its entity name
+;; Arguments:
+;;   loop-entity - Entity name: The polyline entity to find
+;; Returns: Loop record (association list) or nil if not found
+(defun td-find-loop-by-entity (loop-entity / found-loop)
+  (setq found-loop nil)
+  (foreach loop-record *td-loops*
+    (if (= (cdr (assoc 'ENTITY loop-record)) loop-entity)
+      (setq found-loop loop-record)
+    )
+  )
+  found-loop
 )
 
 ;; Function: td-find-room-by-name
@@ -377,7 +394,7 @@
 ;; Command: C:TD_LOOPDEF
 ;; Description: Define loops (circuits) for a room
 ;; Usage: Type TD_LOOPDEF at the AutoCAD command line
-(defun C:TD_LOOPDEF ( / room-name room-record collector loop-ents sorted-ents
+(defun C:TD_LOOPDEF ( / room-name room-record collector spacing loop-ents sorted-ents
                        index loop-ent loop-length loop-name new-loops ss loop-count i use-default)
   (princ "\n=== Thermoduct Tools: Define Loops ===")
 
@@ -389,6 +406,7 @@
     (progn
       (princ "\nWarning: Room not found in database. Continuing anyway...")
       (setq collector (getint "\nEnter collector number: "))
+      (setq spacing (getint "\nEnter spacing (mm, e.g., 100 or 150): "))
     )
     (progn
       ;; Use the collector from the room record, but allow override
@@ -400,6 +418,8 @@
         (setq collector (cdr (assoc 'COLLECTOR room-record)))
         (setq collector (getint "\nEnter collector number: "))
       )
+      ;; Get spacing from room record
+      (setq spacing (cdr (assoc 'SPACING room-record)))
     )
   )
 
@@ -454,7 +474,7 @@
           (progn
             ;; Add loop record
             (princ "\n[DEBUG] Adding loop record...")
-            (td-add-loop-record room-name collector index loop-name loop-length loop-ent)
+            (td-add-loop-record room-name collector index loop-name spacing loop-length loop-ent)
             (princ "\n[DEBUG] Loop record added successfully")
             (setq new-loops (append new-loops (list (last *td-loops*))))
             (setq index (1+ index))
@@ -470,6 +490,120 @@
         (princ "\nNo loops were successfully processed.")
       )
       (princ "\n[DEBUG] TD_LOOPDEF completed successfully")
+    )
+  )
+  (princ)
+)
+
+;;;============================================================================
+;;; TASK 3: LOOP TAGGING - USER COMMAND
+;;;============================================================================
+
+;; Command: C:TD_TAGLOOPS
+;; Description: Insert loop tags (blocks) for selected loop polylines
+;; Usage: Type TD_TAGLOOPS at the AutoCAD command line
+(defun C:TD_TAGLOOPS ( / block-name layer-name ss loop-count i loop-ent loop-record
+                        spacing lp-value collector-str index-str insert-point
+                        block-obj att-obj)
+  (princ "\n=== Thermoduct Tools: Tag Loops ===")
+
+  (setq block-name "VV_KRINGTAG")
+  (setq layer-name "VV_KRINGSYM")
+
+  ;; Step 1: Check if block exists
+  (if (not (tblsearch "BLOCK" block-name))
+    (progn
+      (princ (strcat "\nError: Block '" block-name "' not found in drawing!"))
+      (princ "\nPlease ensure the block definition exists before running this command.")
+      (princ)
+    )
+    (progn
+      ;; Step 2: Select loop polylines
+      (princ "\nSelect loop polylines to tag:")
+      (setq ss (ssget '((0 . "LWPOLYLINE,POLYLINE"))))
+
+      (if (not ss)
+        (progn
+          (princ "\nNo polylines selected. Command cancelled.")
+          (princ)
+        )
+        (progn
+          ;; Step 3: Process each selected polyline
+          (setq loop-count (sslength ss))
+          (princ (strcat "\n" (itoa loop-count) " polyline(s) selected."))
+          (setq i 0)
+
+          (repeat loop-count
+            (setq loop-ent (ssname ss i))
+
+            ;; Find the loop record for this entity
+            (setq loop-record (td-find-loop-by-entity loop-ent))
+
+            (if (not loop-record)
+              (progn
+                (princ (strcat "\nWarning: No loop data found for polyline #" (itoa (+ i 1)) ". Skipping."))
+              )
+              (progn
+                ;; Extract data from loop record
+                (setq spacing (cdr (assoc 'SPACING loop-record)))
+                (setq collector-str (itoa (cdr (assoc 'COLLECTOR loop-record))))
+                (setq index-str (itoa (cdr (assoc 'INDEX loop-record))))
+
+                ;; Calculate LP value: spacing / 10
+                (setq lp-value (strcat "LP " (itoa (/ spacing 10))))
+
+                ;; Ask for insertion point
+                (princ (strcat "\nLoop " (cdr (assoc 'NAME loop-record))
+                              " (Spacing: " (itoa spacing) "mm, "
+                              lp-value ")"))
+                (setq insert-point (getpoint "\nSpecify insertion point for tag: "))
+
+                (if insert-point
+                  (progn
+                    ;; Step 4: Insert the block with attributes
+                    ;; Set current layer to VV_KRINGSYM
+                    (setvar "CLAYER" layer-name)
+
+                    ;; Insert the block
+                    (command "_.INSERT" block-name insert-point "" "" "")
+
+                    ;; Get the inserted block
+                    (setq block-obj (vlax-ename->vla-object (entlast)))
+
+                    ;; Set attributes
+                    (vlax-for att-obj (vlax-invoke block-obj 'GetAttributes)
+                      (cond
+                        ;; Attribute LP
+                        ((= (strcase (vla-get-TagString att-obj)) "LP")
+                         (vla-put-TextString att-obj lp-value))
+
+                        ;; Attribute C (collector)
+                        ((= (strcase (vla-get-TagString att-obj)) "C")
+                         (vla-put-TextString att-obj collector-str))
+
+                        ;; Attribute K (index)
+                        ((= (strcase (vla-get-TagString att-obj)) "K")
+                         (vla-put-TextString att-obj index-str))
+                      )
+                    )
+
+                    (princ (strcat "\n  Tag inserted: LP=" lp-value
+                                  ", C=" collector-str
+                                  ", K=" index-str))
+                  )
+                  (princ "\n  No insertion point specified. Skipping.")
+                )
+              )
+            )
+
+            (setq i (1+ i))
+          )
+
+          (princ "\n========================================")
+          (princ "\nLoop tagging complete!")
+          (princ "\n========================================")
+        )
+      )
     )
   )
   (princ)
@@ -553,6 +687,7 @@
 (princ "\n Available Commands:")
 (princ "\n   TD_ROOMDEF   - Define a room")
 (princ "\n   TD_LOOPDEF   - Define loops for a room")
+(princ "\n   TD_TAGLOOPS  - Insert loop tags (blocks) for loops")
 (princ "\n   TD_LISTROOMS - List all defined rooms")
 (princ "\n   TD_LISTLOOPS - List all defined loops")
 (princ "\n   TD_CLEARALL  - Clear all data")
