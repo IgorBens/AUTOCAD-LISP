@@ -287,7 +287,12 @@
   )
 
   ;; Extract just the entity names
-  (setq sorted-ents (mapcar 'car sorted-data))
+  (setq sorted-ents
+    (mapcar
+      (function (lambda (pair) (car pair)))
+      sorted-data
+    )
+  )
   sorted-ents
 )
 
@@ -329,7 +334,7 @@
 ;; Description: Define loops (circuits) for a room
 ;; Usage: Type TD_LOOPDEF at the AutoCAD command line
 (defun C:TD_LOOPDEF ( / room-name room-record collector loop-ents sorted-ents
-                       index loop-ent length loop-name new-loops)
+                       index loop-ent length loop-name new-loops ss loop-count i use-default)
   (princ "\n=== Thermoduct Tools: Define Loops ===")
 
   ;; Step 1: Get the room (for v1, just ask for room name)
