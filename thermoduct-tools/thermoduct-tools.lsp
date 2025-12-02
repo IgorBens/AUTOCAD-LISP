@@ -504,7 +504,7 @@
 ;; Usage: Type TD_TAGLOOPS at the AutoCAD command line
 (defun C:TD_TAGLOOPS ( / block-name layer-name ss loop-count i loop-ent loop-record
                         spacing lp-value collector-str index-str insert-point
-                        block-obj att-obj acadObj mspace pt-vla atts attrib tag att-idx)
+                        block-obj acadObj mspace pt-vla attrib tag)
   (princ "\n=== Thermoduct Tools: Tag Loops ===")
 
   ;; Load COM library
@@ -577,41 +577,28 @@
                     ;; Set block layer
                     (vla-put-Layer block-obj layer-name)
 
-                    ;; Get attributes and set values
-                    (setq atts (vlax-invoke block-obj 'GetAttributes))
+                    ;; Set attributes using vlax-for (handles variants automatically)
+                    (vlax-for attrib (vlax-invoke block-obj 'GetAttributes)
+                      (setq tag (strcase (vla-get-TagString attrib)))
 
-                    ;; Check if attributes exist
-                    (if (> (vlax-safearray-get-u-bound atts 1) -1)
-                      (progn
-                        ;; Loop through all attributes
-                        (setq att-idx 0)
-                        (repeat (1+ (vlax-safearray-get-u-bound atts 1))
-                          (setq attrib (vlax-safearray-get-element atts att-idx))
-                          (setq tag (strcase (vla-get-TagString attrib)))
+                      (cond
+                        ;; Attribute Legpatroon (LP value)
+                        ((= tag "LEGPATROON")
+                         (vla-put-TextString attrib lp-value))
 
-                          (cond
-                            ;; Attribute Legpatroon (LP value)
-                            ((= tag "LEGPATROON")
-                             (vla-put-TextString attrib lp-value))
+                        ;; Attribute Collector
+                        ((= tag "COLLECTOR")
+                         (vla-put-TextString attrib collector-str))
 
-                            ;; Attribute Collector
-                            ((= tag "COLLECTOR")
-                             (vla-put-TextString attrib collector-str))
-
-                            ;; Attribute Kringnummer (loop index)
-                            ((= tag "KRINGNUMMER")
-                             (vla-put-TextString attrib index-str))
-                          )
-
-                          (setq att-idx (1+ att-idx))
-                        )
-
-                        (princ (strcat "\n  Tag inserted: LP=" lp-value
-                                      ", Collector=" collector-str
-                                      ", Kring=" index-str))
+                        ;; Attribute Kringnummer (loop index)
+                        ((= tag "KRINGNUMMER")
+                         (vla-put-TextString attrib index-str))
                       )
-                      (princ "\n  Warning: Block has no attributes!")
                     )
+
+                    (princ (strcat "\n  Tag inserted: LP=" lp-value
+                                  ", Collector=" collector-str
+                                  ", Kring=" index-str))
                   )
                   (princ "\n  No insertion point specified. Skipping.")
                 )
