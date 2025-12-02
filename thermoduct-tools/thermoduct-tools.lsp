@@ -394,8 +394,8 @@
 ;; Command: C:TD_LOOPDEF
 ;; Description: Define loops (circuits) for a room
 ;; Usage: Type TD_LOOPDEF at the AutoCAD command line
-(defun C:TD_LOOPDEF ( / room-name room-record collector spacing loop-ents sorted-ents
-                       index loop-ent loop-length loop-name new-loops ss loop-count i use-default)
+(defun C:TD_LOOPDEF ( / room-name room-record collector spacing loop-ents
+                       index loop-ent loop-length loop-name new-loops use-default)
   (princ "\n=== Thermoduct Tools: Define Loops ===")
 
   ;; Step 1: Get the room (for v1, just ask for room name)
@@ -423,42 +423,50 @@
     )
   )
 
-  ;; Step 2: Select loop polylines
-  (princ "\nSelect loop polylines (one or more):")
+  ;; Step 2: Select loop polylines one at a time in order
+  (princ "\nSelect loop polylines IN ORDER (starting from leftmost):")
+  (princ "\nClick each polyline in the order you want them numbered.")
   (setq loop-ents '())
-  (setq ss (ssget '((0 . "LWPOLYLINE,POLYLINE"))))
+  (setq loop-ent T)
 
-  (if (not ss)
+  ;; Keep asking for polylines until user presses Enter
+  (while loop-ent
+    (if (= (length loop-ents) 0)
+      (setq loop-ent (entsel "\nSelect FIRST loop polyline: "))
+      (setq loop-ent (entsel "\nSelect NEXT loop polyline (or press Enter to finish): "))
+    )
+
+    (if loop-ent
+      (progn
+        (setq loop-ent (car loop-ent))
+        ;; Verify it's a polyline
+        (if (member (cdr (assoc 0 (entget loop-ent))) '("LWPOLYLINE" "POLYLINE"))
+          (progn
+            (setq loop-ents (append loop-ents (list loop-ent)))
+            (princ (strcat "\n  Added loop #" (itoa (length loop-ents))))
+          )
+          (princ "\n  Error: Selected entity is not a polyline. Try again.")
+        )
+      )
+    )
+  )
+
+  (if (= (length loop-ents) 0)
     (progn
       (princ "\nNo polylines selected. Command cancelled.")
       (princ)
     )
     (progn
-      ;; Convert selection set to list of entity names
-      (princ "\n[DEBUG] Converting selection set to list...")
-      (setq loop-count (sslength ss))
-      (princ (strcat "\n[DEBUG] Number of polylines selected: " (itoa loop-count)))
-      (setq i 0)
-      (repeat loop-count
-        (setq loop-ents (cons (ssname ss i) loop-ents))
-        (setq i (1+ i))
-      )
-      (setq loop-ents (reverse loop-ents))
-      (princ (strcat "\n[DEBUG] Entity list created, length: " (itoa (length loop-ents))))
+      (princ (strcat "\n" (itoa (length loop-ents)) " polyline(s) selected in order."))
 
-      ;; Step 3: Sort loops from left to right (by X coordinate)
-      (princ "\n[DEBUG] About to sort loops by X coordinate...")
-      (setq sorted-ents (td-sort-loops-by-x loop-ents))
-      (princ (strcat "\n[DEBUG] Sorting complete, sorted list length: " (itoa (length sorted-ents))))
-
-      ;; Step 4: Process each loop
+      ;; Step 3: Process each loop in the order selected (no sorting!)
       (princ "\n[DEBUG] Starting to process each loop...")
       ;; Get the next available index for this collector (continues numbering from existing loops)
       (setq index (td-next-index-for-collector collector))
       (princ (strcat "\n[DEBUG] Starting index for collector " (itoa collector) ": " (itoa index)))
       (setq new-loops '())
 
-      (foreach loop-ent sorted-ents
+      (foreach loop-ent loop-ents
         (princ (strcat "\n[DEBUG] Processing loop " (itoa index) "..."))
 
         ;; Generate loop name
