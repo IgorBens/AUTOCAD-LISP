@@ -580,7 +580,7 @@
                     ;; Get attributes
                     (princ "\n[DEBUG] Getting attributes...")
                     (setq atts (vlax-invoke block-obj 'GetAttributes))
-                    (princ (strcat "\n[DEBUG] Attributes type: " (type atts)))
+                    (princ (strcat "\n[DEBUG] Attributes type: " (vl-prin1-to-string (type atts))))
 
                     ;; Check if attributes exist using safearray
                     (if (and atts (not (= -1 (vlax-safearray-get-u-bound atts 1))))
