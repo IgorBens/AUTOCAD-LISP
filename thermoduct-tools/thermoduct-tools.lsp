@@ -582,16 +582,14 @@
                     (setq atts (vlax-invoke block-obj 'GetAttributes))
                     (princ (strcat "\n[DEBUG] Attributes type: " (vl-prin1-to-string (type atts))))
 
-                    ;; Check if attributes exist using safearray
-                    (if (and atts (not (= -1 (vlax-safearray-get-u-bound atts 1))))
+                    ;; Check if attributes exist - GetAttributes returns a list
+                    (if atts
                       (progn
-                        (setq att-count (1+ (vlax-safearray-get-u-bound atts 1)))
+                        (setq att-count (length atts))
                         (princ (strcat "\n[DEBUG] Number of attributes: " (itoa att-count)))
 
-                        ;; Loop through attributes using safearray method
-                        (setq att-idx 0)
-                        (repeat att-count
-                          (setq attrib (vlax-safearray-get-element atts att-idx))
+                        ;; Loop through attributes using foreach (since it's a list)
+                        (foreach attrib atts
                           (setq tag (strcase (vla-get-TagString attrib)))
                           (princ (strcat "\n[DEBUG] Attribute tag: " tag))
 
@@ -611,15 +609,13 @@
                              (princ (strcat "\n[DEBUG] Setting KRINGNUMMER to: " index-str))
                              (vla-put-TextString attrib index-str))
                           )
-
-                          (setq att-idx (1+ att-idx))
                         )
 
                         (princ (strcat "\n  Tag inserted: LP=" lp-value
                                       ", Collector=" collector-str
                                       ", Kring=" index-str))
                       )
-                      (princ "\n[DEBUG] Warning: No attributes found or empty safearray!")
+                      (princ "\n[DEBUG] Warning: No attributes found!")
                     )
                   )
                   (princ "\n  No insertion point specified. Skipping.")
