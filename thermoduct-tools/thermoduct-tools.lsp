@@ -594,19 +594,19 @@
                           (princ (strcat "\n[DEBUG] Attribute tag: " tag))
 
                           (cond
-                            ;; Attribute Legpatroon (LP value)
-                            ((= tag "LEGPATROON")
-                             (princ (strcat "\n[DEBUG] Setting LEGPATROON to: " lp-value))
+                            ;; Attribute LP (Legpatroon - LP value)
+                            ((= tag "LP")
+                             (princ (strcat "\n[DEBUG] Setting LP to: " lp-value))
                              (vla-put-TextString attrib lp-value))
 
-                            ;; Attribute Collector
-                            ((= tag "COLLECTOR")
-                             (princ (strcat "\n[DEBUG] Setting COLLECTOR to: " collector-str))
+                            ;; Attribute C (Collector)
+                            ((= tag "C")
+                             (princ (strcat "\n[DEBUG] Setting C to: " collector-str))
                              (vla-put-TextString attrib collector-str))
 
-                            ;; Attribute Kringnummer (loop index)
-                            ((= tag "KRINGNUMMER")
-                             (princ (strcat "\n[DEBUG] Setting KRINGNUMMER to: " index-str))
+                            ;; Attribute K (Kringnummer - loop index)
+                            ((= tag "K")
+                             (princ (strcat "\n[DEBUG] Setting K to: " index-str))
                              (vla-put-TextString attrib index-str))
                           )
                         )
