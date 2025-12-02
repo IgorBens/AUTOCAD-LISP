@@ -504,7 +504,7 @@
 ;; Usage: Type TD_TAGLOOPS at the AutoCAD command line
 (defun C:TD_TAGLOOPS ( / block-name layer-name ss loop-count i loop-ent loop-record
                         spacing lp-value collector-str index-str insert-point
-                        block-obj acadObj mspace pt-vla attrib tag)
+                        block-obj acadObj mspace pt-vla attrib tag atts att-count att-idx)
   (princ "\n=== Thermoduct Tools: Tag Loops ===")
 
   ;; Load COM library
@@ -577,28 +577,50 @@
                     ;; Set block layer
                     (vla-put-Layer block-obj layer-name)
 
-                    ;; Set attributes using vlax-for (handles variants automatically)
-                    (vlax-for attrib (vlax-invoke block-obj 'GetAttributes)
-                      (setq tag (strcase (vla-get-TagString attrib)))
+                    ;; Get attributes
+                    (princ "\n[DEBUG] Getting attributes...")
+                    (setq atts (vlax-invoke block-obj 'GetAttributes))
+                    (princ (strcat "\n[DEBUG] Attributes type: " (type atts)))
 
-                      (cond
-                        ;; Attribute Legpatroon (LP value)
-                        ((= tag "LEGPATROON")
-                         (vla-put-TextString attrib lp-value))
+                    ;; Check if attributes exist using safearray
+                    (if (and atts (not (= -1 (vlax-safearray-get-u-bound atts 1))))
+                      (progn
+                        (setq att-count (1+ (vlax-safearray-get-u-bound atts 1)))
+                        (princ (strcat "\n[DEBUG] Number of attributes: " (itoa att-count)))
 
-                        ;; Attribute Collector
-                        ((= tag "COLLECTOR")
-                         (vla-put-TextString attrib collector-str))
+                        ;; Loop through attributes using safearray method
+                        (setq att-idx 0)
+                        (repeat att-count
+                          (setq attrib (vlax-safearray-get-element atts att-idx))
+                          (setq tag (strcase (vla-get-TagString attrib)))
+                          (princ (strcat "\n[DEBUG] Attribute tag: " tag))
 
-                        ;; Attribute Kringnummer (loop index)
-                        ((= tag "KRINGNUMMER")
-                         (vla-put-TextString attrib index-str))
+                          (cond
+                            ;; Attribute Legpatroon (LP value)
+                            ((= tag "LEGPATROON")
+                             (princ (strcat "\n[DEBUG] Setting LEGPATROON to: " lp-value))
+                             (vla-put-TextString attrib lp-value))
+
+                            ;; Attribute Collector
+                            ((= tag "COLLECTOR")
+                             (princ (strcat "\n[DEBUG] Setting COLLECTOR to: " collector-str))
+                             (vla-put-TextString attrib collector-str))
+
+                            ;; Attribute Kringnummer (loop index)
+                            ((= tag "KRINGNUMMER")
+                             (princ (strcat "\n[DEBUG] Setting KRINGNUMMER to: " index-str))
+                             (vla-put-TextString attrib index-str))
+                          )
+
+                          (setq att-idx (1+ att-idx))
+                        )
+
+                        (princ (strcat "\n  Tag inserted: LP=" lp-value
+                                      ", Collector=" collector-str
+                                      ", Kring=" index-str))
                       )
+                      (princ "\n[DEBUG] Warning: No attributes found or empty safearray!")
                     )
-
-                    (princ (strcat "\n  Tag inserted: LP=" lp-value
-                                  ", Collector=" collector-str
-                                  ", Kring=" index-str))
                   )
                   (princ "\n  No insertion point specified. Skipping.")
                 )
