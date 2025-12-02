@@ -504,11 +504,18 @@
 ;; Usage: Type TD_TAGLOOPS at the AutoCAD command line
 (defun C:TD_TAGLOOPS ( / block-name layer-name ss loop-count i loop-ent loop-record
                         spacing lp-value collector-str index-str insert-point
-                        block-obj att-obj)
+                        block-obj att-obj acadObj mspace pt-vla atts attrib tag att-idx)
   (princ "\n=== Thermoduct Tools: Tag Loops ===")
+
+  ;; Load COM library
+  (vl-load-com)
 
   (setq block-name "0_07 TD - NUMMERING [Projects]")
   (setq layer-name "0_20 TD - Nummering Kringen")
+
+  ;; Get AutoCAD objects for VLA operations
+  (setq acadObj (vlax-get-acad-object))
+  (setq mspace (vla-get-ModelSpace (vla-get-ActiveDocument acadObj)))
 
   ;; Step 1: Check if block exists
   (if (not (tblsearch "BLOCK" block-name))
@@ -560,36 +567,51 @@
 
                 (if insert-point
                   (progn
-                    ;; Step 4: Insert the block with attributes
-                    ;; Set current layer to VV_KRINGSYM
-                    (setvar "CLAYER" layer-name)
+                    ;; Step 4: Insert the block with attributes using VLA
+                    ;; Convert insertion point to VLA point
+                    (setq pt-vla (vlax-3d-point (list (car insert-point) (cadr insert-point) 0.0)))
 
-                    ;; Insert the block (use -INSERT to suppress attribute prompts)
-                    (command "_.-INSERT" block-name insert-point "" "" "")
+                    ;; Insert block using VLA (no prompts)
+                    (setq block-obj (vla-InsertBlock mspace pt-vla block-name 1.0 1.0 1.0 0.0))
 
-                    ;; Get the inserted block
-                    (setq block-obj (vlax-ename->vla-object (entlast)))
+                    ;; Set block layer
+                    (vla-put-Layer block-obj layer-name)
 
-                    ;; Set attributes
-                    (vlax-for att-obj (vlax-invoke block-obj 'GetAttributes)
-                      (cond
-                        ;; Attribute Legpatroon (LP value)
-                        ((= (strcase (vla-get-TagString att-obj)) "LEGPATROON")
-                         (vla-put-TextString att-obj lp-value))
+                    ;; Get attributes and set values
+                    (setq atts (vlax-invoke block-obj 'GetAttributes))
 
-                        ;; Attribute Collector
-                        ((= (strcase (vla-get-TagString att-obj)) "COLLECTOR")
-                         (vla-put-TextString att-obj collector-str))
+                    ;; Check if attributes exist
+                    (if (> (vlax-safearray-get-u-bound atts 1) -1)
+                      (progn
+                        ;; Loop through all attributes
+                        (setq att-idx 0)
+                        (repeat (1+ (vlax-safearray-get-u-bound atts 1))
+                          (setq attrib (vlax-safearray-get-element atts att-idx))
+                          (setq tag (strcase (vla-get-TagString attrib)))
 
-                        ;; Attribute Kringnummer (loop index)
-                        ((= (strcase (vla-get-TagString att-obj)) "KRINGNUMMER")
-                         (vla-put-TextString att-obj index-str))
+                          (cond
+                            ;; Attribute Legpatroon (LP value)
+                            ((= tag "LEGPATROON")
+                             (vla-put-TextString attrib lp-value))
+
+                            ;; Attribute Collector
+                            ((= tag "COLLECTOR")
+                             (vla-put-TextString attrib collector-str))
+
+                            ;; Attribute Kringnummer (loop index)
+                            ((= tag "KRINGNUMMER")
+                             (vla-put-TextString attrib index-str))
+                          )
+
+                          (setq att-idx (1+ att-idx))
+                        )
+
+                        (princ (strcat "\n  Tag inserted: LP=" lp-value
+                                      ", Collector=" collector-str
+                                      ", Kring=" index-str))
                       )
+                      (princ "\n  Warning: Block has no attributes!")
                     )
-
-                    (princ (strcat "\n  Tag inserted: LP=" lp-value
-                                  ", C=" collector-str
-                                  ", K=" index-str))
                   )
                   (princ "\n  No insertion point specified. Skipping.")
                 )
